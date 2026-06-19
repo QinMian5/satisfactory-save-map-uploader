@@ -1,0 +1,17 @@
+# abstract: Local repository hooks for formatting, checks, and commit-message policy.
+# out_of_scope: CI provider configuration, product-specific hooks, and remote hook repositories.
+
+repos:
+  - repo: local
+    hooks:
+      - id: root-check
+        name: root check
+        entry: pnpm run check
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]
+      - id: commitlint
+        name: commitlint
+        entry: pnpm exec commitlint --edit
+        language: system
+        stages: [commit-msg]
