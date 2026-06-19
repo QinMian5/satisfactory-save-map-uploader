@@ -59,6 +59,16 @@ describe("findLatestSave", () => {
     await expect(findLatestSave(root)).resolves.toBe(save);
   });
 
+  it("ignores Satisfactory server manager metadata saves", async () => {
+    const root = await createTempRoot();
+    const save = path.join(root, "factory.sav");
+    const serverManager = path.join(root, "ServerManager_V2.sav");
+    await writeFileWithMtime(save, new Date("2026-01-01T00:00:00.000Z"));
+    await writeFileWithMtime(serverManager, new Date("2026-01-03T00:00:00.000Z"));
+
+    await expect(findLatestSave(root)).resolves.toBe(save);
+  });
+
   it("returns null when no save files exist", async () => {
     const root = await createTempRoot();
     await writeFile(path.join(root, "notes.txt"), "not a save");

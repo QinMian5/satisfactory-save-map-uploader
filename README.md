@@ -31,9 +31,10 @@ pnpm run dev
 Compiled mode:
 
 ```powershell
-pnpm run build
 pnpm run start
 ```
+
+`pnpm run start` builds `dist` before launching the watcher.
 
 ## Check
 

@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "tsx src/index.ts",
     "build": "tsc -p tsconfig.json",
-    "start": "node dist/index.js",
+    "start": "pnpm run build && node dist/index.js",
     "lint": "biome ci .",
     "fix": "biome check --write .",
     "typecheck": "tsc -p tsconfig.json --noEmit",

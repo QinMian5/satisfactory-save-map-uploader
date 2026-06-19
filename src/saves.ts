@@ -13,6 +13,8 @@ type SaveCandidate = {
   modifiedMs: number;
 };
 
+const SERVER_MANAGER_SAVE_PATTERN = /^ServerManager(?:_V\d+)?\.sav$/i;
+
 export function getDefaultSaveRoot(env: Environment = process.env): string {
   if (!env.LOCALAPPDATA) {
     throw new Error("LOCALAPPDATA is not set; cannot locate Satisfactory saves.");
@@ -39,7 +41,7 @@ async function findLatestSaveCandidate(root: string): Promise<SaveCandidate | nu
       continue;
     }
 
-    if (!entry.isFile() || path.extname(entry.name).toLowerCase() !== ".sav") {
+    if (!entry.isFile() || !isGameSaveFile(entry.name)) {
       continue;
     }
 
@@ -51,6 +53,12 @@ async function findLatestSaveCandidate(root: string): Promise<SaveCandidate | nu
   }
 
   return latest;
+}
+
+function isGameSaveFile(fileName: string): boolean {
+  return (
+    path.extname(fileName).toLowerCase() === ".sav" && !SERVER_MANAGER_SAVE_PATTERN.test(fileName)
+  );
 }
 
 function chooseLatest(
