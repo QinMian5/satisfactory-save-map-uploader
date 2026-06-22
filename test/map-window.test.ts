@@ -1,9 +1,11 @@
 // abstract: Tests for map window lifecycle, navigation guards, and upload background throttling.
 // out_of_scope: Real Electron BrowserWindow construction, real sessions, and network loading.
 
+import vm from "node:vm";
 import { describe, expect, it, vi } from "vitest";
 import {
   getEmbeddedMapViewBounds,
+  getMapViewportAlignmentScript,
   type ManagedBrowserWindow,
   MapWindowManager,
 } from "../src/main/windows/map-window.js";
@@ -146,6 +148,10 @@ function emitDidFinishLoad(window: { handlers: HandlerMap }): void {
   }
 }
 
+async function runMapAlignmentScript(script: string, context: vm.Context): Promise<unknown> {
+  return await vm.runInNewContext(script, context);
+}
+
 describe("MapWindowManager", () => {
   it("reserves the left toolbar area when embedding the map in the status window", () => {
     expect(getEmbeddedMapViewBounds({ width: 1280, height: 720 }, 300)).toEqual({
@@ -260,6 +266,7 @@ describe("MapWindowManager", () => {
     const fakeWindow = createFakeWindow();
     fakeWindow.webContents.executeJavaScript = vi
       .fn()
+      .mockResolvedValueOnce({ aligned: true })
       .mockResolvedValueOnce({ x: 16, y: 512 })
       .mockResolvedValueOnce(undefined);
     const manager = new MapWindowManager({
@@ -278,11 +285,18 @@ describe("MapWindowManager", () => {
 
     expect(fakeWindow.webContents.executeJavaScript).toHaveBeenNthCalledWith(
       1,
-      expect.stringContaining("window.scrollX"),
+      expect.stringContaining(
+        "body > main > div:nth-child(2) > div:nth-child(2) > div.col-md-4.col-lg-3",
+      ),
       true,
     );
     expect(fakeWindow.webContents.executeJavaScript).toHaveBeenNthCalledWith(
       2,
+      expect.stringContaining("window.scrollX"),
+      true,
+    );
+    expect(fakeWindow.webContents.executeJavaScript).toHaveBeenNthCalledWith(
+      3,
       expect.stringContaining("window.scrollTo(16, 512)"),
       true,
     );
@@ -319,6 +333,86 @@ describe("MapWindowManager", () => {
       await expect(manager.getScrollPosition()).resolves.toEqual({ x: 0, y: 0 });
       await manager.restoreScrollPosition({ x: 0, y: 128 });
     });
+
+    expect(fakeWindow.webContents.executeJavaScript).not.toHaveBeenCalled();
+  });
+
+  it("builds a page script that scrolls to the requested map layout anchor with top padding", async () => {
+    const requestedAnchorSelector =
+      "body > main > div:nth-child(2) > div:nth-child(2) > div.col-md-4.col-lg-3";
+    const scrollTo = vi.fn();
+    const querySelector = vi.fn((selector: string) => {
+      if (selector === requestedAnchorSelector) {
+        return {
+          getBoundingClientRect: () => ({ top: 184 }),
+        };
+      }
+      if (selector === "body > header > nav") {
+        return {
+          getBoundingClientRect: () => ({ height: 72 }),
+        };
+      }
+      return null;
+    });
+
+    const result = await runMapAlignmentScript(getMapViewportAlignmentScript(), {
+      document: { querySelector },
+      window: {
+        scrollX: 12,
+        scrollY: 300,
+        scrollTo,
+        setTimeout,
+      },
+    });
+
+    expect(querySelector).toHaveBeenCalledWith(requestedAnchorSelector);
+    expect(querySelector).toHaveBeenCalledWith("body > header > nav");
+    expect(scrollTo).toHaveBeenCalledWith({ behavior: "auto", left: 12, top: 396 });
+    expect(result).toEqual({
+      aligned: true,
+      headerHeight: 72,
+      selector: requestedAnchorSelector,
+      y: 396,
+    });
+  });
+
+  it("aligns the remote page to the map container after the map main frame loads", async () => {
+    const fakeWindow = createFakeWindow();
+    fakeWindow.webContents.executeJavaScript = vi.fn().mockResolvedValue({ aligned: false });
+    const manager = new MapWindowManager({
+      createWindow: () => fakeWindow,
+      createSession: () => ({
+        setPermissionRequestHandler: vi.fn(),
+        setPermissionCheckHandler: vi.fn(),
+      }),
+    });
+
+    const load = manager.loadMap("https://satisfactory-calculator.com/zh/interactive-map", 5_000);
+    emitDidFinishLoad(fakeWindow);
+    await load;
+
+    expect(fakeWindow.webContents.executeJavaScript).toHaveBeenCalledWith(
+      expect.stringContaining(
+        "body > main > div:nth-child(2) > div:nth-child(2) > div.col-md-4.col-lg-3",
+      ),
+      true,
+    );
+  });
+
+  it("does not run map viewport alignment for non-map origins", async () => {
+    const fakeWindow = createFakeWindow();
+    fakeWindow.webContents.executeJavaScript = vi.fn().mockResolvedValue({ aligned: false });
+    const manager = new MapWindowManager({
+      createWindow: () => fakeWindow,
+      createSession: () => ({
+        setPermissionRequestHandler: vi.fn(),
+        setPermissionCheckHandler: vi.fn(),
+      }),
+    });
+
+    const load = manager.loadMap("http://127.0.0.1:8123/fixture", 5_000);
+    emitDidFinishLoad(fakeWindow);
+    await load;
 
     expect(fakeWindow.webContents.executeJavaScript).not.toHaveBeenCalled();
   });

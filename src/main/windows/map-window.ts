@@ -32,6 +32,16 @@ import {
 import { createMapViewOptions, createMapWindowOptions } from "../security/window-options.js";
 
 const DOM_POLL_INTERVAL_MS = 250;
+const MAP_VIEWPORT_ALIGNMENT_TOP_PADDING_PX = 16;
+const MAP_VIEWPORT_ALIGNMENT_TIMEOUT_MS = 2_000;
+const MAP_VIEWPORT_ALIGNMENT_POLL_INTERVAL_MS = 100;
+const MAP_VIEWPORT_ALIGNMENT_SELECTORS = [
+  "body > main > div:nth-child(2) > div:nth-child(2) > div.col-md-4.col-lg-3",
+  ".leaflet-container",
+  "#interactiveMap",
+  "#map",
+  "#map-container",
+];
 export const DEFAULT_EMBEDDED_MAP_TOOLBAR_WIDTH = 300;
 
 type Size = {
@@ -54,6 +64,68 @@ export function getEmbeddedMapViewBounds(
     width: Math.max(0, contentSize.width - toolbarWidth),
     height: contentSize.height,
   };
+}
+
+export function getMapViewportAlignmentScript(): string {
+  return `(() => {
+    const selectors = ${JSON.stringify(MAP_VIEWPORT_ALIGNMENT_SELECTORS)};
+    const topPadding = ${MAP_VIEWPORT_ALIGNMENT_TOP_PADDING_PX};
+    const timeoutMs = ${MAP_VIEWPORT_ALIGNMENT_TIMEOUT_MS};
+    const pollIntervalMs = ${MAP_VIEWPORT_ALIGNMENT_POLL_INTERVAL_MS};
+    const getHeaderHeight = () => {
+      const nav = document.querySelector("body > header > nav");
+      if (!nav || typeof nav.getBoundingClientRect !== "function") {
+        return 0;
+      }
+      const navRect = nav.getBoundingClientRect();
+      if (Number.isFinite(navRect.height)) {
+        return Math.max(0, Math.round(navRect.height));
+      }
+      if (Number.isFinite(navRect.top) && Number.isFinite(navRect.bottom)) {
+        return Math.max(0, Math.round(navRect.bottom - navRect.top));
+      }
+      if (Number.isFinite(nav.offsetHeight)) {
+        return Math.max(0, Math.round(nav.offsetHeight));
+      }
+        return 0;
+    };
+    const findTarget = () => {
+      for (const selector of selectors) {
+        const element = document.querySelector(selector);
+        if (!element || typeof element.getBoundingClientRect !== "function") {
+          continue;
+        }
+        const rect = element.getBoundingClientRect();
+        if (!Number.isFinite(rect.top)) {
+          continue;
+        }
+        return { rect, selector };
+      }
+      return undefined;
+    };
+    return new Promise((resolve) => {
+      const startedAt = Date.now();
+      const poll = () => {
+        const target = findTarget();
+        if (target) {
+          const headerHeight = getHeaderHeight();
+          const y = Math.max(
+            0,
+            Math.round(target.rect.top + window.scrollY - headerHeight - topPadding),
+          );
+          window.scrollTo({ behavior: "auto", left: window.scrollX, top: y });
+          resolve({ aligned: true, headerHeight, selector: target.selector, y });
+          return;
+        }
+        if (Date.now() - startedAt >= timeoutMs) {
+          resolve({ aligned: false });
+          return;
+        }
+        window.setTimeout(poll, pollIntervalMs);
+      };
+      poll();
+    });
+  })()`;
 }
 
 type NavigationEvent = {
@@ -162,6 +234,7 @@ export class MapWindowManager implements MapWindowPort {
     const window = this.getOrCreateWindow();
     await loadUrlWithTimeout(window, url, timeoutMs, signal);
     this.hasLoadedMapContent = true;
+    await this.alignViewportToMapContent(url, signal);
   }
 
   async waitForDomReady(timeoutMs: number, signal?: AbortSignal): Promise<void> {
@@ -243,6 +316,19 @@ export class MapWindowManager implements MapWindowPort {
         window.webContents.setBackgroundThrottling(true);
         this.onBackgroundThrottlingChange?.(true);
       }
+    }
+  }
+
+  private async alignViewportToMapContent(url: string, signal?: AbortSignal): Promise<void> {
+    const window = this.window;
+    if (!shouldAlignMapViewport(url) || signal?.aborted || !window || window.isDestroyed()) {
+      return;
+    }
+
+    try {
+      await window.webContents.executeJavaScript(getMapViewportAlignmentScript(), true);
+    } catch {
+      // Viewport alignment is best-effort and must not mask page load or upload results.
     }
   }
 
@@ -411,6 +497,14 @@ function createNavigationBlocker(policy: (targetUrl: string, isMainFrame: boolea
       event.preventDefault();
     }
   };
+}
+
+function shouldAlignMapViewport(url: string): boolean {
+  try {
+    return new URL(url).origin === new URL(MAP_URL).origin;
+  } catch {
+    return false;
+  }
 }
 
 function loadUrlWithTimeout(
