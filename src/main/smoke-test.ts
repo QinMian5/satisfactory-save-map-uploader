@@ -8,7 +8,8 @@ import path from "node:path";
 import type { App, BrowserWindow, IpcMain } from "electron";
 import { AppStateStore } from "../services/app-state.js";
 import { IPC_CHANNELS } from "../shared/ipc.js";
-import type { AppStateSnapshot } from "../shared/state.js";
+import type { AppLanguage, AppStateSnapshot } from "../shared/state.js";
+import { DEFAULT_APP_LANGUAGE } from "../shared/state.js";
 import { registerIpcHandlers } from "./ipc/register-handlers.js";
 import { createStatusWindow, type StatusWindowRendererEntry } from "./windows/status-window.js";
 
@@ -23,6 +24,7 @@ type SmokeWatcher = {
   acceptThirdPartyUpload: () => Promise<AppStateSnapshot>;
   declineThirdPartyUpload: () => Promise<AppStateSnapshot>;
   revokeThirdPartyUpload: () => Promise<AppStateSnapshot>;
+  setLanguage: (language: AppLanguage) => Promise<AppStateSnapshot>;
   getDisclosure: () => Promise<AppStateSnapshot>;
 };
 
@@ -67,6 +69,7 @@ export async function runSmokeTest(options: RunSmokeTestOptions): Promise<void> 
       acceptedDisclosureVersion: null,
       currentDisclosureVersion: 1,
       autoStartWatcher: false,
+      language: DEFAULT_APP_LANGUAGE,
     });
     const commands = createSmokeCommands(state, counters);
     statusWindow = createStatusWindow(options.preloadEntry, options.rendererEntry);
@@ -166,6 +169,10 @@ function createSmokeCommands(state: AppStateStore, counters: SmokeCounters): Smo
       });
       return state.getSnapshot();
     },
+    setLanguage: async (language) => {
+      state.update({ language });
+      return state.getSnapshot();
+    },
     getDisclosure: async () => {
       return state.getSnapshot();
     },
@@ -180,7 +187,7 @@ async function verifyRenderer(statusWindow: BrowserWindow): Promise<void> {
       async () => {
         const api = window.satisfactoryApp;
         if (!api) return { ok: false, reason: "missing preload API" };
-        for (const name of ["getState", "getDisclosure", "acceptThirdPartyUpload", "declineThirdPartyUpload", "revokeThirdPartyUpload", "startWatcher", "stopWatcher", "uploadLatestSave", "openMap", "onStateChanged"]) {
+        for (const name of ["getState", "getDisclosure", "acceptThirdPartyUpload", "declineThirdPartyUpload", "revokeThirdPartyUpload", "setLanguage", "startWatcher", "stopWatcher", "uploadLatestSave", "openMap", "onStateChanged"]) {
           if (typeof api[name] !== "function") {
             return { ok: false, reason: "missing API method: " + name };
           }

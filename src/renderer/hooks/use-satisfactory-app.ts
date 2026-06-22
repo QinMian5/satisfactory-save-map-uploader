@@ -2,13 +2,14 @@
 // out_of_scope: Presentational layout, save watching internals, and Electron IPC handlers.
 
 import { useCallback, useEffect, useState } from "react";
-import type { AppStateSnapshot } from "../../shared/state.js";
+import type { AppLanguage, AppStateSnapshot } from "../../shared/state.js";
 
 export type SatisfactoryAppCommands = {
   acceptThirdPartyUpload: () => Promise<void>;
   declineThirdPartyUpload: () => Promise<void>;
   disableUploadsAndExit: () => Promise<void>;
   revokeThirdPartyUpload: () => Promise<void>;
+  setLanguage: (language: AppLanguage) => Promise<void>;
   startWatcher: () => Promise<void>;
   stopWatcher: () => Promise<void>;
   uploadLatestSave: () => Promise<void>;
@@ -85,6 +86,7 @@ export function useSatisfactoryApp(): SatisfactoryAppModel {
       declineThirdPartyUpload: () => runCommand(window.satisfactoryApp.declineThirdPartyUpload),
       disableUploadsAndExit,
       revokeThirdPartyUpload: () => runCommand(window.satisfactoryApp.revokeThirdPartyUpload),
+      setLanguage: (language) => runCommand(() => window.satisfactoryApp.setLanguage(language)),
       startWatcher: () => runCommand(window.satisfactoryApp.startWatcher),
       stopWatcher: () => runCommand(window.satisfactoryApp.stopWatcher),
       uploadLatestSave: () => runCommand(window.satisfactoryApp.uploadLatestSave),

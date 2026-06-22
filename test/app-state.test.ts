@@ -21,6 +21,7 @@ describe("AppStateStore", () => {
       acceptedDisclosureVersion: null,
       currentDisclosureVersion: 1,
       autoStartWatcher: false,
+      language: "en",
       privacyNotice: null,
       logs: [],
     });

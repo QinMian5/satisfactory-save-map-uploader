@@ -11,6 +11,7 @@ import {
   type MapWindowPort,
   UploadError,
 } from "../src/services/save-uploader.js";
+import { getMapUrlForLanguage } from "../src/shared/language.js";
 
 function createDebugger(overrides: Partial<DebuggerPort> = {}): DebuggerPort & {
   commands: string[];
@@ -237,7 +238,7 @@ describe("ElectronSaveUploader", () => {
     await uploader.upload(absoluteSavePath());
 
     expect(mapWindow.loadMap).toHaveBeenCalledWith(
-      "https://satisfactory-calculator.com/zh/interactive-map",
+      getMapUrlForLanguage("zh-CN"),
       60_000,
       expect.any(AbortSignal),
     );
@@ -284,10 +285,7 @@ describe("ElectronSaveUploader", () => {
 
     await uploader.openMap();
 
-    expect(mapWindow.loadMap).toHaveBeenCalledWith(
-      "https://satisfactory-calculator.com/zh/interactive-map",
-      60_000,
-    );
+    expect(mapWindow.loadMap).toHaveBeenCalledWith(getMapUrlForLanguage("zh-CN"), 60_000);
     expect(mapWindow.show).toHaveBeenCalledTimes(1);
     expect(mapWindow.focus).toHaveBeenCalledTimes(1);
     expect(mapWindow.getElementState).not.toHaveBeenCalled();
@@ -305,6 +303,28 @@ describe("ElectronSaveUploader", () => {
 
     expect(mapWindow.loadMap).toHaveBeenCalledWith(
       "http://127.0.0.1:49152/fixture?token=test",
+      60_000,
+      expect.any(AbortSignal),
+    );
+  });
+
+  it("uses the latest target URL provider value for each map load", async () => {
+    let targetUrl = getMapUrlForLanguage("en");
+    const mapWindow = createMapWindow();
+    const uploader = new ElectronSaveUploader({
+      mapWindow,
+      statFile: statFile(),
+      targetUrl: () => targetUrl,
+    });
+
+    await uploader.openMap();
+    targetUrl = getMapUrlForLanguage("zh-CN");
+    await uploader.upload(absoluteSavePath());
+
+    expect(mapWindow.loadMap).toHaveBeenNthCalledWith(1, getMapUrlForLanguage("en"), 60_000);
+    expect(mapWindow.loadMap).toHaveBeenNthCalledWith(
+      2,
+      getMapUrlForLanguage("zh-CN"),
       60_000,
       expect.any(AbortSignal),
     );

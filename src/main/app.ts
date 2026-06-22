@@ -15,6 +15,7 @@ import { RevocationMarkerService } from "../services/revocation-marker.js";
 import { ElectronSaveUploader } from "../services/save-uploader.js";
 import { SaveWatcherService } from "../services/save-watcher.js";
 import { IPC_CHANNELS } from "../shared/ipc.js";
+import { getMapUrlForLanguage } from "../shared/language.js";
 import {
   parseIntegrationUploadConfig,
   runIntegrationUploadTest,
@@ -149,6 +150,7 @@ async function createRuntime(): Promise<AppRuntime> {
     acceptedDisclosureVersion: consentSnapshot.acceptedDisclosureVersion,
     currentDisclosureVersion: consentSnapshot.currentDisclosureVersion,
     autoStartWatcher: consentSnapshot.autoStartWatcher,
+    language: consentSnapshot.language,
   });
   if (preferencesResult.warning) {
     state.addLog("warn", preferencesResult.warning);
@@ -199,6 +201,7 @@ async function createRuntime(): Promise<AppRuntime> {
           resourceRequestPolicy: mapResourcePolicy,
           showOnCreate: showMapOnCreate,
         }),
+        targetUrl: () => getMapUrlForLanguage(consent.getSnapshot().language),
         authorization,
       }),
     createWatcher: ({ saveRoot, state: watcherState, uploader, authorization }) =>

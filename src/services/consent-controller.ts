@@ -1,6 +1,7 @@
 // abstract: Third-party upload disclosure consent state and generation guard.
 // out_of_scope: Preferences file IO, Electron IPC, and save watcher orchestration.
 
+import type { AppLanguage } from "../shared/state.js";
 import type { UserPreferences } from "./preferences.js";
 
 export const CURRENT_DISCLOSURE_VERSION = 1;
@@ -14,6 +15,7 @@ export type ConsentSnapshot = {
   acceptedDisclosureVersion: number | null;
   currentDisclosureVersion: number;
   autoStartWatcher: boolean;
+  language: AppLanguage;
 };
 
 export type UploadAuthorizationPort = {
@@ -40,6 +42,7 @@ export class ConsentRequiredError extends Error {
 export class ConsentController implements UploadAuthorizationPort {
   private acceptedDisclosureVersion: number | null;
   private autoStartWatcher: boolean;
+  private language: AppLanguage;
   private generation = 0;
   private readonly now: () => Date;
 
@@ -51,6 +54,7 @@ export class ConsentController implements UploadAuthorizationPort {
       this.acceptedDisclosureVersion = options.preferences.thirdPartyUploadDisclosureVersion;
       this.autoStartWatcher = false;
     }
+    this.language = options.preferences.language;
     this.now = options.now ?? (() => new Date());
   }
 
@@ -60,6 +64,7 @@ export class ConsentController implements UploadAuthorizationPort {
       acceptedDisclosureVersion: this.acceptedDisclosureVersion,
       currentDisclosureVersion: CURRENT_DISCLOSURE_VERSION,
       autoStartWatcher: this.autoStartWatcher,
+      language: this.language,
     };
   }
 
@@ -80,6 +85,7 @@ export class ConsentController implements UploadAuthorizationPort {
       thirdPartyUploadDisclosureVersion: CURRENT_DISCLOSURE_VERSION,
       autoStartWatcher: options.autoStartWatcher,
       acceptedAt: this.now().toISOString(),
+      language: this.language,
     };
   }
 
@@ -95,7 +101,23 @@ export class ConsentController implements UploadAuthorizationPort {
       thirdPartyUploadDisclosureVersion: this.acceptedDisclosureVersion,
       autoStartWatcher,
       acceptedAt: this.hasCurrentConsent() ? this.now().toISOString() : null,
+      language: this.language,
     };
+  }
+
+  createLanguagePreferences(language: AppLanguage): UserPreferences {
+    return {
+      schemaVersion: 1,
+      thirdPartyUploadDisclosureVersion: this.acceptedDisclosureVersion,
+      autoStartWatcher: this.autoStartWatcher,
+      acceptedAt: this.hasCurrentConsent() ? this.now().toISOString() : null,
+      language,
+    };
+  }
+
+  setLanguageInMemory(language: AppLanguage): UserPreferences {
+    this.language = language;
+    return this.toPreferences(this.hasCurrentConsent() ? this.now().toISOString() : null);
   }
 
   revokeInMemory(): UserPreferences {
@@ -137,6 +159,7 @@ export class ConsentController implements UploadAuthorizationPort {
       thirdPartyUploadDisclosureVersion: this.acceptedDisclosureVersion,
       autoStartWatcher: this.autoStartWatcher,
       acceptedAt,
+      language: this.language,
     };
   }
 }

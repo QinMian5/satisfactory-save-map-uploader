@@ -2,6 +2,7 @@
 // out_of_scope: DOM mutation, Electron IPC, and main-process state mutation.
 
 import type { AppStateSnapshot } from "../shared/state.js";
+import { getRendererCopy } from "./i18n.js";
 
 export type RendererViewMode = "consent" | "dashboard";
 
@@ -42,9 +43,10 @@ export function getRendererViewMode(state: AppStateSnapshot): RendererViewMode {
 
 export function getDashboardSummary(state: AppStateSnapshot): DashboardSummary {
   const issue = getDashboardIssue(state);
+  const copy = getRendererCopy(state.language);
 
   return {
-    latestSaveTitle: getSaveFileName(state.latestSavePath) ?? "No save selected",
+    latestSaveTitle: getSaveFileName(state.latestSavePath) ?? copy.dashboard.noSaveSelected,
     issueTitle: issue?.title ?? null,
     issueDetail: issue?.detail ?? null,
     showIssue: Boolean(issue),
@@ -58,9 +60,10 @@ export function getDashboardViewModel(
   commandError: string | null,
 ): DashboardViewModel {
   const summary = getDashboardSummary(state);
+  const copy = getRendererCopy(state.language);
   return {
     latestSaveTitle: summary.latestSaveTitle,
-    issueTitle: commandError ? "Command failed" : summary.issueTitle,
+    issueTitle: commandError ? copy.dashboard.commandFailed : summary.issueTitle,
     issueDetail: commandError ?? summary.issueDetail,
     showIssue: summary.showIssue || Boolean(commandError),
     showStartButton: summary.showStartButton,
@@ -84,21 +87,20 @@ export function getConsentViewModel(state: AppStateSnapshot): ConsentViewModel {
 }
 
 function getDashboardIssue(state: AppStateSnapshot): { title: string; detail: string } | null {
+  const copy = getRendererCopy(state.language);
   if (
     state.consentPersistenceStatus === "error" ||
     state.consentPersistenceStatus === "durable-revoke-failed"
   ) {
     return {
-      title: "Settings were not saved",
-      detail:
-        state.consentPersistenceMessage ??
-        "The app could not save your permission settings. Retry before closing the app.",
+      title: copy.dashboard.settingsNotSaved,
+      detail: state.consentPersistenceMessage ?? copy.dashboard.settingsNotSavedDetail,
     };
   }
 
   if (state.lastError) {
     return {
-      title: "Action needed",
+      title: copy.dashboard.actionNeeded,
       detail: state.lastError,
     };
   }
@@ -109,6 +111,7 @@ function getDashboardIssue(state: AppStateSnapshot): { title: string; detail: st
 function getPermissionPersistenceIssue(
   state: AppStateSnapshot,
 ): { title: string; detail: string } | null {
+  const copy = getRendererCopy(state.language);
   if (
     state.consentPersistenceStatus !== "error" &&
     state.consentPersistenceStatus !== "durable-revoke-failed"
@@ -117,10 +120,8 @@ function getPermissionPersistenceIssue(
   }
 
   return {
-    title: "Settings were not saved",
-    detail:
-      state.consentPersistenceMessage ??
-      "The app could not save your permission settings. Retry before closing the app.",
+    title: copy.dashboard.settingsNotSaved,
+    detail: state.consentPersistenceMessage ?? copy.dashboard.settingsNotSavedDetail,
   };
 }
 

@@ -2,10 +2,10 @@
 // out_of_scope: Electron context exposure, renderer DOM updates, and service implementations.
 
 import { IPC_CHANNELS, type SatisfactoryRendererApi } from "../shared/ipc.js";
-import type { AppStateSnapshot, DisclosureSnapshot } from "../shared/state.js";
+import type { AppLanguage, AppStateSnapshot, DisclosureSnapshot } from "../shared/state.js";
 
 export type IpcRendererPort = {
-  invoke: (channel: string) => Promise<unknown>;
+  invoke: (channel: string, ...args: unknown[]) => Promise<unknown>;
   on: (channel: string, listener: (event: unknown, state: AppStateSnapshot) => void) => void;
   removeListener: (
     channel: string,
@@ -24,6 +24,8 @@ export function createPreloadApi(ipcRenderer: IpcRendererPort): SatisfactoryRend
       ipcRenderer.invoke(IPC_CHANNELS.declineThirdPartyUpload) as Promise<AppStateSnapshot>,
     revokeThirdPartyUpload: () =>
       ipcRenderer.invoke(IPC_CHANNELS.revokeThirdPartyUpload) as Promise<AppStateSnapshot>,
+    setLanguage: (language: AppLanguage) =>
+      ipcRenderer.invoke(IPC_CHANNELS.setLanguage, language) as Promise<AppStateSnapshot>,
     startWatcher: () => ipcRenderer.invoke(IPC_CHANNELS.startWatcher) as Promise<AppStateSnapshot>,
     stopWatcher: () => ipcRenderer.invoke(IPC_CHANNELS.stopWatcher) as Promise<AppStateSnapshot>,
     uploadLatestSave: () =>

@@ -3,13 +3,14 @@
 
 import { stat } from "node:fs/promises";
 import path from "node:path";
+import { getMapUrlForLanguage } from "../shared/language.js";
 import type { UploadConsentToken } from "./consent-controller.js";
 
 const DEFAULT_UPLOAD_TIMEOUT_MS = 60_000;
 const DEFAULT_PROCESSING_START_TIMEOUT_MS = 5_000;
 
 export const UPLOAD_CONFIG = {
-  mapUrl: "https://satisfactory-calculator.com/zh/interactive-map",
+  mapUrl: getMapUrlForLanguage("zh-CN"),
   selectors: {
     saveFileInput: "#saveGameFileInput",
     uploadPanel: "#dropSaveGame",
@@ -89,7 +90,7 @@ export type MapWindowPort = {
 
 type ElectronSaveUploaderOptions = {
   mapWindow: MapWindowPort;
-  targetUrl?: string;
+  targetUrl?: string | (() => string);
   timeoutMs?: number;
   processingStartTimeoutMs?: number;
   statFile?: (savePath: string) => Promise<{ isFile: () => boolean }>;
@@ -250,7 +251,7 @@ export class CdpFileInputSetter {
 
 export class ElectronSaveUploader {
   private readonly mapWindow: MapWindowPort;
-  private readonly targetUrl: string;
+  private readonly getTargetUrl: () => string;
   private readonly timeoutMs: number;
   private readonly processingStartTimeoutMs: number;
   private readonly statFile: (savePath: string) => Promise<{ isFile: () => boolean }>;
@@ -268,7 +269,8 @@ export class ElectronSaveUploader {
 
   constructor(options: ElectronSaveUploaderOptions) {
     this.mapWindow = options.mapWindow;
-    this.targetUrl = options.targetUrl ?? MAP_URL;
+    const targetUrl = options.targetUrl ?? MAP_URL;
+    this.getTargetUrl = typeof targetUrl === "function" ? targetUrl : () => targetUrl;
     this.timeoutMs = options.timeoutMs ?? DEFAULT_UPLOAD_TIMEOUT_MS;
     this.processingStartTimeoutMs =
       options.processingStartTimeoutMs ?? DEFAULT_PROCESSING_START_TIMEOUT_MS;
@@ -305,7 +307,7 @@ export class ElectronSaveUploader {
     try {
       try {
         throwIfAborted(signal);
-        await this.mapWindow.loadMap(this.targetUrl, this.timeoutMs, signal);
+        await this.mapWindow.loadMap(this.getTargetUrl(), this.timeoutMs, signal);
         throwIfAborted(signal);
         await this.mapWindow.waitForDomReady(this.timeoutMs, signal);
       } catch (error) {
@@ -432,7 +434,7 @@ export class ElectronSaveUploader {
   }
 
   async openMap(): Promise<void> {
-    await this.mapWindow.loadMap(this.targetUrl, this.timeoutMs);
+    await this.mapWindow.loadMap(this.getTargetUrl(), this.timeoutMs);
     this.mapWindow.show();
     this.mapWindow.focus();
   }

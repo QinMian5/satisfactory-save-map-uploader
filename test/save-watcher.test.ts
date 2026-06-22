@@ -295,6 +295,33 @@ describe("SaveWatcherService", () => {
     await vi.waitFor(() => expect(uploaded).toEqual(["first.sav", "manual.sav"]));
   });
 
+  it("uploads a specified save path without scanning for the latest save", async () => {
+    const findLatestSave = vi.fn().mockResolvedValue("newer.sav");
+    const upload = vi.fn().mockResolvedValue(undefined);
+    const state = new AppStateStore({ saveRoot: "C:\\Saves" });
+    const service = new SaveWatcherService({
+      saveRoot: "C:\\Saves",
+      state,
+      exists: () => true,
+      findLatestSave,
+      watch: vi.fn((_root, _options, _next) => ({ close: vi.fn() })),
+      uploader: { upload, openMap: vi.fn(), close: vi.fn() },
+      debounceMs: 2_000,
+      uploadOnStart: false,
+    });
+
+    await service.start();
+    await service.uploadSave("C:\\Saves\\previously-opened.sav", "language change");
+
+    expect(findLatestSave).not.toHaveBeenCalled();
+    expect(upload).toHaveBeenCalledWith("C:\\Saves\\previously-opened.sav", undefined);
+    expect(state.getSnapshot()).toMatchObject({
+      latestSavePath: "C:\\Saves\\previously-opened.sav",
+      uploadStatus: "success",
+      lastUploadResult: "success",
+    });
+  });
+
   it("does not let a closed active upload write a stale final result", async () => {
     const first = createDeferred();
     const state = new AppStateStore({ saveRoot: "C:\\Saves" });

@@ -3,16 +3,18 @@
 
 import { Badge } from "../components/ui/badge.js";
 import { Card } from "../components/ui/card.js";
+import type { RendererCopy } from "../i18n.js";
 
 type LoadingViewProps = {
   error: string | null;
+  copy: RendererCopy["loading"];
 };
 
-export function LoadingView({ error }: LoadingViewProps) {
+export function LoadingView({ copy, error }: LoadingViewProps) {
   return (
     <main className="flex min-h-screen items-center justify-center bg-background p-6 text-foreground">
       <Card className="w-full max-w-md">
-        <Badge tone={error ? "error" : "working"}>{error ? "Error" : "Loading"}</Badge>
+        <Badge tone={error ? "error" : "working"}>{error ? copy.error : copy.loading}</Badge>
         {error ? <p className="mt-3 text-sm text-destructive">{error}</p> : null}
       </Card>
     </main>

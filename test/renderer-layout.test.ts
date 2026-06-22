@@ -106,6 +106,7 @@ describe("renderer React shell", () => {
       "src/renderer/components/ui/alert.tsx",
       "src/renderer/components/ui/alert-dialog.tsx",
       "src/renderer/components/ui/collapsible.tsx",
+      "src/renderer/components/ui/dropdown-menu.tsx",
       "src/renderer/components/ui/separator.tsx",
       "src/renderer/components/ui/tooltip.tsx",
     ]) {
@@ -114,10 +115,21 @@ describe("renderer React shell", () => {
 
     expect(renderer).toContain("@radix-ui/react-alert-dialog");
     expect(renderer).toContain("@radix-ui/react-collapsible");
+    expect(renderer).toContain("@radix-ui/react-dropdown-menu");
     expect(renderer).toContain("@radix-ui/react-separator");
     expect(renderer).toContain("@radix-ui/react-tooltip");
+    expect(renderer).toContain("Globe");
+    expect(renderer).not.toContain("Languages");
     expect(renderer).not.toContain("<details");
     expect(renderer).not.toContain("<summary");
+    expect(renderer).not.toContain("<select");
+  });
+
+  it("syncs document language metadata from the selected app language", async () => {
+    const app = await readFile("src/renderer/App.tsx", "utf8");
+
+    expect(app).toContain("document.documentElement.lang = language");
+    expect(app).toContain("document.title = copy.documentTitle");
   });
 
   it("uses a filled destructive button variant for dangerous actions", async () => {

@@ -4,6 +4,8 @@
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
+import { RENDERER_LANGUAGE_COPY } from "../src/renderer/i18n.js";
+import { getMapUrlForLanguage } from "../src/shared/language.js";
 
 async function readRendererText(): Promise<string> {
   const files = await collectFiles("src/renderer");
@@ -33,7 +35,10 @@ describe("renderer disclosure UI", () => {
     expect(renderer).toContain("Allow uploads");
     expect(renderer).toContain("Not now, exit");
     expect(renderer).toContain("Disable uploads");
-    expect(renderer).toContain("https://satisfactory-calculator.com/zh/interactive-map");
+    expect(renderer).toContain('getMapUrlForLanguage("zh-CN")');
+    expect(RENDERER_LANGUAGE_COPY["zh-CN"].consent.warningDescription).toContain(
+      getMapUrlForLanguage("zh-CN"),
+    );
     expect(renderer).toContain("file contents");
     expect(renderer).toContain("IP address");
     expect(renderer).toMatch(/not\s+affiliated/i);
@@ -51,7 +56,7 @@ describe("renderer disclosure UI", () => {
     const renderer = await readRendererText();
 
     expect(renderer).toContain("Currently opened save");
-    expect(renderer).toContain("Start watching");
+    expect(renderer).toContain("Start automatic upload");
     expect(renderer).toContain("Pause watching");
     expect(renderer).toContain("Upload latest save");
     expect(renderer).toContain("Scan the save folder and upload new saves automatically.");
@@ -86,9 +91,13 @@ describe("renderer disclosure UI", () => {
   });
 
   it("keeps the dashboard header to a single title", async () => {
-    const dashboard = await readFile("src/renderer/views/dashboard-view.tsx", "utf8");
+    const [dashboard, i18n] = await Promise.all([
+      readFile("src/renderer/views/dashboard-view.tsx", "utf8"),
+      readFile("src/renderer/i18n.ts", "utf8"),
+    ]);
 
-    expect(dashboard).toContain("Map watcher");
+    expect(dashboard).toContain("copy.dashboard.title");
+    expect(i18n).toContain("Map watcher");
     expect(dashboard.match(/<CommandTooltip/g)?.length).toBe(4);
     expect(dashboard).not.toContain("Permission");
     expect(dashboard).not.toContain("app-kicker");
@@ -97,15 +106,17 @@ describe("renderer disclosure UI", () => {
 
   it("places disable uploads below the current save summary", async () => {
     const dashboard = await readFile("src/renderer/views/dashboard-view.tsx", "utf8");
-    const commandSectionStart = dashboard.indexOf('aria-label="Watcher commands"');
-    const currentSaveSummary = dashboard.indexOf('<SummaryCard label="Currently opened save"');
+    const commandSectionStart = dashboard.indexOf("aria-label={copy.dashboard.commandsLabel}");
+    const currentSaveSummary = dashboard.indexOf(
+      "<SummaryCard label={copy.dashboard.currentSaveLabel}",
+    );
     const disableDialog = dashboard.indexOf("<AlertDialog>");
 
     expect(commandSectionStart).toBeGreaterThan(-1);
     expect(currentSaveSummary).toBeGreaterThan(commandSectionStart);
     expect(disableDialog).toBeGreaterThan(currentSaveSummary);
     expect(dashboard.slice(commandSectionStart, currentSaveSummary)).not.toContain(
-      "Disable uploads",
+      "copy.dashboard.disable",
     );
   });
 
@@ -123,16 +134,17 @@ describe("renderer disclosure UI", () => {
   });
 
   it("makes disabling uploads revoke permission and exit the app", async () => {
-    const [dashboard, hook] = await Promise.all([
+    const [dashboard, hook, i18n] = await Promise.all([
       readFile("src/renderer/views/dashboard-view.tsx", "utf8"),
       readFile("src/renderer/hooks/use-satisfactory-app.ts", "utf8"),
+      readFile("src/renderer/i18n.ts", "utf8"),
     ]);
 
-    expect(dashboard).toContain("Disable uploads and exit?");
-    expect(dashboard).toContain("This stops future uploads and exits the app.");
+    expect(i18n).toContain("Disable uploads and exit?");
+    expect(i18n).toContain("This stops future uploads and exits the app.");
     expect(dashboard).toContain("commands.disableUploadsAndExit");
-    expect(dashboard).toContain("<AlertDialogCancel>Cancel</AlertDialogCancel>");
-    expect(dashboard).toContain("Confirm");
+    expect(dashboard).toContain("<AlertDialogCancel>{copy.dashboard.cancel}</AlertDialogCancel>");
+    expect(dashboard).toContain("copy.dashboard.confirm");
     expect(dashboard).not.toContain(">Disable uploads</AlertDialogAction>");
     expect(hook).toContain("disableUploadsAndExit");
     expect(hook.indexOf("await window.satisfactoryApp.revokeThirdPartyUpload()")).toBeLessThan(

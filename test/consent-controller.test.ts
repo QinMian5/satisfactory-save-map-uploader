@@ -16,6 +16,7 @@ describe("ConsentController", () => {
         thirdPartyUploadDisclosureVersion: null,
         autoStartWatcher: false,
         acceptedAt: null,
+        language: "en",
       },
     });
     const old = new ConsentController({
@@ -24,6 +25,7 @@ describe("ConsentController", () => {
         thirdPartyUploadDisclosureVersion: CURRENT_DISCLOSURE_VERSION - 1,
         autoStartWatcher: true,
         acceptedAt: null,
+        language: "en",
       },
     });
 
@@ -47,6 +49,7 @@ describe("ConsentController", () => {
         thirdPartyUploadDisclosureVersion: CURRENT_DISCLOSURE_VERSION,
         autoStartWatcher: true,
         acceptedAt: "2026-06-20T00:00:00.000Z",
+        language: "en",
       },
       revocation: { revoked: true, warning: null },
     });
@@ -66,6 +69,7 @@ describe("ConsentController", () => {
         thirdPartyUploadDisclosureVersion: CURRENT_DISCLOSURE_VERSION,
         autoStartWatcher: true,
         acceptedAt: "2026-06-20T00:00:00.000Z",
+        language: "en",
       },
       revocation: { revoked: true, warning: "Could not read revocation marker." },
     });
@@ -85,6 +89,7 @@ describe("ConsentController", () => {
         thirdPartyUploadDisclosureVersion: CURRENT_DISCLOSURE_VERSION,
         autoStartWatcher: true,
         acceptedAt: "2026-06-20T00:00:00.000Z",
+        language: "en",
       },
     });
 
@@ -109,6 +114,7 @@ describe("ConsentController", () => {
         thirdPartyUploadDisclosureVersion: null,
         autoStartWatcher: false,
         acceptedAt: null,
+        language: "en",
       },
       now,
     });
@@ -120,6 +126,7 @@ describe("ConsentController", () => {
       thirdPartyUploadDisclosureVersion: CURRENT_DISCLOSURE_VERSION,
       autoStartWatcher: true,
       acceptedAt: "2026-06-20T00:00:00.000Z",
+      language: "en",
     });
     expect(controller.getSnapshot().consentRequired).toBe(false);
   });

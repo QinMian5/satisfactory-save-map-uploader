@@ -87,3 +87,11 @@ The system SHALL require explicit user permission before scanning local saves fo
 The system SHALL allow the user to revoke that permission and SHALL treat missing, invalid, unreadable, or outdated permission state as not authorized.
 
 The system SHALL keep revoked permission effective across restarts unless the user explicitly grants permission again.
+
+### R-011: Interface language preference
+
+As a user, I want to choose the interface language so that permission disclosures and watcher controls are understandable.
+
+The system SHALL provide a persisted user-selectable interface language.
+
+The system SHALL load the interactive map workflow using the map locale associated with the selected interface language.

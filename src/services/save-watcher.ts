@@ -40,6 +40,7 @@ type UploadSource = "automatic" | "manual";
 type UploadRequest = {
   reason: string;
   source: UploadSource;
+  savePath?: string;
 };
 
 export class SaveWatcherService {
@@ -138,6 +139,10 @@ export class SaveWatcherService {
     await this.enqueueUpload({ reason: "manual upload", source: "manual" });
   }
 
+  async uploadSave(savePath: string, reason: string): Promise<void> {
+    await this.enqueueUpload({ reason, source: "manual", savePath });
+  }
+
   async openMap(): Promise<void> {
     try {
       this.authorization?.createUploadToken();
@@ -220,9 +225,9 @@ export class SaveWatcherService {
       return;
     }
 
-    const latestSave = await this.findLatestSave(this.saveRoot);
+    const savePath = request.savePath ?? (await this.findLatestSave(this.saveRoot));
 
-    if (!latestSave) {
+    if (!savePath) {
       this.state.addLog("warn", `No .sav files found under ${this.saveRoot}.`);
       return;
     }
@@ -232,15 +237,16 @@ export class SaveWatcherService {
     const startedAt = this.now().toISOString();
     this.state.update({
       uploadStatus: "loading-page",
-      latestSavePath: latestSave,
+      latestSavePath: savePath,
       lastUploadStartedAt: startedAt,
       lastUploadResult: null,
       lastError: null,
     });
-    this.state.addLog("info", `Uploading latest save after ${request.reason}: ${latestSave}`);
+    const uploadLabel = request.savePath ? "save" : "latest save";
+    this.state.addLog("info", `Uploading ${uploadLabel} after ${request.reason}: ${savePath}`);
 
     try {
-      await this.uploader.upload(latestSave, token);
+      await this.uploader.upload(savePath, token);
       if (!this.isCurrentOperation(currentOperationId)) {
         return;
       }
@@ -249,7 +255,7 @@ export class SaveWatcherService {
         lastUploadFinishedAt: this.now().toISOString(),
         lastUploadResult: "success",
       });
-      this.state.addLog("info", `Uploaded save: ${latestSave}`);
+      this.state.addLog("info", `Uploaded save: ${savePath}`);
     } catch (error) {
       if (!this.isCurrentOperation(currentOperationId)) {
         return;

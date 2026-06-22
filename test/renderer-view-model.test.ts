@@ -28,6 +28,7 @@ function state(patch: Partial<AppStateSnapshot> = {}): AppStateSnapshot {
     consentPersistenceMessage: null,
     privacyNotice: null,
     permissionStatus: "not-granted",
+    language: "en",
     logs: [],
     ...patch,
   };
@@ -105,6 +106,34 @@ describe("renderer view model", () => {
       ),
     ).toMatchObject({
       latestSaveTitle: "No save selected",
+    });
+  });
+
+  it("maps concise user-facing summary fields through the selected language", () => {
+    expect(
+      getDashboardSummary(
+        state({
+          permissionStatus: "granted",
+          consentRequired: false,
+          language: "zh-CN",
+        }),
+      ),
+    ).toMatchObject({
+      latestSaveTitle: "未选择存档",
+    });
+
+    expect(
+      getConsentViewModel(
+        state({
+          language: "zh-CN",
+          consentPersistenceStatus: "error",
+          consentPersistenceMessage: "无法保存设置。",
+        }),
+      ),
+    ).toMatchObject({
+      issueTitle: "设置未保存",
+      issueDetail: "无法保存设置。",
+      showIssue: true,
     });
   });
 

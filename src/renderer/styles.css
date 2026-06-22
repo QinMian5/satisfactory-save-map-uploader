@@ -5,6 +5,10 @@
   --color-foreground: #1f2522;
   --color-card: #ffffff;
   --color-card-foreground: #1f2522;
+  --color-popover: #ffffff;
+  --color-popover-foreground: #1f2522;
+  --color-accent: #fff4ec;
+  --color-accent-foreground: #9a3f0c;
   --color-muted: #faf8f4;
   --color-muted-foreground: #6f6860;
   --color-border: #d8d1c7;

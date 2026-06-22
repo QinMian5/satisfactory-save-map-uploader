@@ -13,6 +13,7 @@ describe("IPC channels", () => {
       getDisclosure: "satisfactory:get-disclosure",
       getState: "satisfactory:get-state",
       revokeThirdPartyUpload: "satisfactory:revoke-third-party-upload",
+      setLanguage: "satisfactory:set-language",
       startWatcher: "satisfactory:start-watcher",
       stopWatcher: "satisfactory:stop-watcher",
       uploadLatestSave: "satisfactory:upload-latest-save",

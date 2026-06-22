@@ -45,6 +45,30 @@ describe("PreferencesService", () => {
         thirdPartyUploadDisclosureVersion: 1,
         autoStartWatcher: true,
         acceptedAt: "2026-06-20T00:00:00.000Z",
+        language: "en",
+      },
+      warning: null,
+    });
+  });
+
+  it("persists the selected interface language", async () => {
+    const root = await createTempRoot();
+    const service = new PreferencesService(root);
+    await service.save({
+      schemaVersion: 1,
+      thirdPartyUploadDisclosureVersion: null,
+      autoStartWatcher: false,
+      acceptedAt: null,
+      language: "zh-CN",
+    });
+
+    await expect(service.load()).resolves.toEqual({
+      preferences: {
+        schemaVersion: 1,
+        thirdPartyUploadDisclosureVersion: null,
+        autoStartWatcher: false,
+        acceptedAt: null,
+        language: "zh-CN",
       },
       warning: null,
     });
@@ -64,6 +88,7 @@ describe("PreferencesService", () => {
 
     expect(result.preferences.thirdPartyUploadDisclosureVersion).toBe(0);
     expect(result.preferences.autoStartWatcher).toBe(true);
+    expect(result.preferences.language).toBe("en");
   });
 
   it("falls back to safe defaults for invalid JSON and field types", async () => {
@@ -111,6 +136,7 @@ describe("PreferencesService", () => {
       thirdPartyUploadDisclosureVersion: 1,
       autoStartWatcher: true,
       acceptedAt: null,
+      language: "en",
       extra: "ignored",
     } as never);
 
@@ -132,6 +158,7 @@ describe("PreferencesService", () => {
         thirdPartyUploadDisclosureVersion: 1,
         autoStartWatcher: true,
         acceptedAt: null,
+        language: "en",
       }),
     ).rejects.toThrow("Could not save preferences");
   });
@@ -145,9 +172,11 @@ describe("PreferencesService", () => {
       thirdPartyUploadDisclosureVersion: null,
       autoStartWatcher: false,
       acceptedAt: null,
+      language: "zh-CN",
     });
 
     const saved = await readFile(path.join(root, "preferences.json"), "utf8");
     expect(saved).toContain('"schemaVersion": 1');
+    expect(saved).toContain('"language": "zh-CN"');
   });
 });

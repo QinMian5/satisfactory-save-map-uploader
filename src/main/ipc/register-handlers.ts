@@ -4,7 +4,7 @@
 import type { BrowserWindow, IpcMain } from "electron";
 import type { AppStateStore } from "../../services/app-state.js";
 import { IPC_CHANNELS } from "../../shared/ipc.js";
-import type { AppStateSnapshot, DisclosureSnapshot } from "../../shared/state.js";
+import type { AppLanguage, AppStateSnapshot, DisclosureSnapshot } from "../../shared/state.js";
 import { assertTrustedSender } from "./sender-validation.js";
 
 type RegisterIpcHandlersOptions = {
@@ -18,6 +18,7 @@ type RegisterIpcHandlersOptions = {
     acceptThirdPartyUpload: () => Promise<AppStateSnapshot>;
     declineThirdPartyUpload: () => Promise<AppStateSnapshot>;
     revokeThirdPartyUpload: () => Promise<AppStateSnapshot>;
+    setLanguage: (language: AppLanguage) => Promise<AppStateSnapshot>;
     getDisclosure: () => Promise<DisclosureSnapshot>;
   };
   state: AppStateStore;
@@ -47,6 +48,13 @@ export function registerIpcHandlers(options: RegisterIpcHandlersOptions): () => 
     assertTrustedSender(event, trustedSender);
     return commands.revokeThirdPartyUpload();
   });
+  ipcMain.handle(
+    IPC_CHANNELS.setLanguage,
+    async (event, language: AppLanguage): Promise<AppStateSnapshot> => {
+      assertTrustedSender(event, trustedSender);
+      return commands.setLanguage(language);
+    },
+  );
   ipcMain.handle(IPC_CHANNELS.startWatcher, async (event): Promise<AppStateSnapshot> => {
     assertTrustedSender(event, trustedSender);
     return commands.startWatcher();
@@ -70,6 +78,7 @@ export function registerIpcHandlers(options: RegisterIpcHandlersOptions): () => 
     ipcMain.removeHandler(IPC_CHANNELS.acceptThirdPartyUpload);
     ipcMain.removeHandler(IPC_CHANNELS.declineThirdPartyUpload);
     ipcMain.removeHandler(IPC_CHANNELS.revokeThirdPartyUpload);
+    ipcMain.removeHandler(IPC_CHANNELS.setLanguage);
     ipcMain.removeHandler(IPC_CHANNELS.startWatcher);
     ipcMain.removeHandler(IPC_CHANNELS.stopWatcher);
     ipcMain.removeHandler(IPC_CHANNELS.uploadLatestSave);

@@ -5,7 +5,7 @@ import { contextBridge, type IpcRendererEvent, ipcRenderer } from "electron";
 import { createPreloadApi, type IpcRendererPort } from "./preload-api.js";
 
 const ipcRendererPort: IpcRendererPort = {
-  invoke: (channel) => ipcRenderer.invoke(channel),
+  invoke: (channel, ...args) => ipcRenderer.invoke(channel, ...args),
   on: (channel, listener) => {
     ipcRenderer.on(channel, listener as (event: IpcRendererEvent, ...args: unknown[]) => void);
   },

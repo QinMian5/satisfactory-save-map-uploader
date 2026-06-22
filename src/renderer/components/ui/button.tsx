@@ -8,7 +8,7 @@ import { forwardRef } from "react";
 import { cn } from "../../lib/utils.js";
 
 const buttonVariants = cva(
-  "inline-flex h-9 w-full items-center justify-center gap-2 rounded-md border px-3 text-sm font-semibold transition-colors focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-60",
+  "inline-flex items-center justify-center gap-2 rounded-md border text-sm font-semibold transition-colors focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-60",
   {
     variants: {
       variant: {
@@ -18,9 +18,14 @@ const buttonVariants = cva(
           "border-destructive bg-destructive text-destructive-foreground hover:bg-destructive/90",
         ghost: "border-transparent bg-transparent text-foreground hover:bg-muted",
       },
+      size: {
+        default: "h-9 w-full px-3",
+        icon: "h-9 w-9 px-0",
+      },
     },
     defaultVariants: {
       variant: "default",
+      size: "default",
     },
   },
 );
@@ -31,11 +36,11 @@ export type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> &
   };
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ asChild = false, className, variant, type = "button", ...props }, ref) => {
+  ({ asChild = false, className, size, variant, type = "button", ...props }, ref) => {
     const Component = asChild ? Slot : "button";
     return (
       <Component
-        className={cn(buttonVariants({ variant }), className)}
+        className={cn(buttonVariants({ size, variant }), className)}
         ref={ref}
         type={asChild ? undefined : type}
         {...props}

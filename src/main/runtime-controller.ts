@@ -6,9 +6,11 @@ import {
   type ConsentController,
   ConsentRequiredError,
   type UploadAuthorizationPort,
+  type UploadConsentToken,
 } from "../services/consent-controller.js";
 import type { UserPreferences } from "../services/preferences.js";
 import { type SaveUploadPort, SaveWatcherService } from "../services/save-watcher.js";
+import { type AppLanguage, isSupportedAppLanguage } from "../shared/language.js";
 import type { AppStateSnapshot, DisclosureSnapshot } from "../shared/state.js";
 
 type PreferencesWriter = {
@@ -27,7 +29,13 @@ type RevocationPreparation = {
 
 type RuntimeWatcherPort = Pick<
   SaveWatcherService,
-  "start" | "stop" | "uploadLatestSave" | "openMap" | "close" | "prepareForRevocation"
+  | "start"
+  | "stop"
+  | "uploadLatestSave"
+  | "uploadSave"
+  | "openMap"
+  | "close"
+  | "prepareForRevocation"
 >;
 
 type RuntimeControllerOptions = {
@@ -96,6 +104,35 @@ export class AppRuntimeController {
     return this.snapshotDisclosure();
   }
 
+  async setLanguage(language: AppLanguage): Promise<AppStateSnapshot> {
+    if (!isSupportedAppLanguage(language)) {
+      throw new Error("Unsupported language preference.");
+    }
+    return this.runExclusive(async () => {
+      const preferences = this.consent.createLanguagePreferences(language);
+      this.syncConsentState({
+        consentPersistenceStatus: "saving",
+        consentPersistenceMessage: "Saving language preference.",
+      });
+      try {
+        await this.preferences.save(preferences);
+      } catch (error) {
+        this.reportLanguagePreferenceError(error);
+        return;
+      }
+
+      this.consent.setLanguageInMemory(language);
+      this.syncConsentState({
+        consentPersistenceStatus: "saved",
+        consentPersistenceMessage: "Language preference saved.",
+        lastError: null,
+      });
+      if (!this.consent.getSnapshot().consentRequired && this.uploader) {
+        await this.reloadMapAfterLanguageChange();
+      }
+    });
+  }
+
   async acceptThirdPartyUpload(): Promise<AppStateSnapshot> {
     const intent = this.createConsentIntent();
     return this.runConsentMutation(async () => {
@@ -129,7 +166,7 @@ export class AppRuntimeController {
         consentPersistenceStatus: "saved",
         consentPersistenceMessage: "Third-party upload permission saved.",
         privacyNotice:
-          "Third-party upload permission is saved. Start watching when you are ready to upload saves.",
+          "Third-party upload permission is saved. Start automatic upload when you are ready to upload saves.",
         lastError: null,
       });
       await this.openMapInternal();
@@ -353,6 +390,67 @@ export class AppRuntimeController {
     }
   }
 
+  private async reloadMapAfterLanguageChange(): Promise<void> {
+    const currentSave = this.state.getSnapshot().latestSavePath;
+    if (!currentSave) {
+      await this.openMapInternal();
+      return;
+    }
+    if (this.watcher) {
+      await this.watcher.uploadSave(currentSave, "language change");
+      return;
+    }
+    await this.uploadCurrentSaveInternal(currentSave);
+  }
+
+  private async uploadCurrentSaveInternal(savePath: string): Promise<void> {
+    let token: UploadConsentToken;
+    try {
+      token = this.consent.createUploadToken();
+    } catch (error) {
+      if (error instanceof ConsentRequiredError || error instanceof Error) {
+        this.state.update({
+          consentRequired: true,
+          permissionStatus: this.unauthorizedPermissionStatus(),
+          uploadStatus: "needs-consent",
+          lastError: error.message,
+          privacyNotice:
+            "Third-party upload permission is required before uploading the selected save.",
+        });
+        this.state.addLog("warn", error.message);
+      }
+      return;
+    }
+
+    this.state.update({
+      uploadStatus: "loading-page",
+      latestSavePath: savePath,
+      lastUploadStartedAt: new Date().toISOString(),
+      lastUploadResult: null,
+      lastError: null,
+    });
+    this.state.addLog("info", `Uploading save after language change: ${savePath}`);
+
+    try {
+      await this.getOrCreateUploader().upload(savePath, token);
+      this.state.update({
+        uploadStatus: "success",
+        lastUploadFinishedAt: new Date().toISOString(),
+        lastUploadResult: "success",
+      });
+      this.state.addLog("info", `Uploaded save: ${savePath}`);
+    } catch (error) {
+      const message = errorMessage(error);
+      this.state.update({
+        uploadStatus: "error",
+        lastUploadFinishedAt: new Date().toISOString(),
+        lastUploadResult: "error",
+        lastError: message,
+      });
+      this.state.addLog("error", message);
+    }
+  }
+
   private async closeWatcher(): Promise<{ fileProvided: boolean }> {
     const watcher = this.watcher;
     this.watcher = undefined;
@@ -422,6 +520,7 @@ export class AppRuntimeController {
       acceptedDisclosureVersion: consent.acceptedDisclosureVersion,
       currentDisclosureVersion: consent.currentDisclosureVersion,
       autoStartWatcher: consent.autoStartWatcher,
+      language: consent.language,
       ...patch,
     });
   }
@@ -446,6 +545,16 @@ export class AppRuntimeController {
       consentPersistenceMessage: message,
       lastError: message,
       privacyNotice: `Preferences could not be saved: ${message}`,
+    });
+    this.state.addLog("error", message);
+  }
+
+  private reportLanguagePreferenceError(error: unknown): void {
+    const message = errorMessage(error);
+    this.syncConsentState({
+      consentPersistenceStatus: "error",
+      consentPersistenceMessage: message,
+      lastError: message,
     });
     this.state.addLog("error", message);
   }

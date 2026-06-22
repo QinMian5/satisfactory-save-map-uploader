@@ -2,11 +2,13 @@
 // out_of_scope: Electron IPC transport, filesystem watching, and map upload automation.
 
 import type {
+  AppLanguage,
   AppLogEntry,
   AppStateSnapshot,
   LogLevel,
   ThirdPartyUploadPermissionStatus,
 } from "../shared/state.js";
+import { DEFAULT_APP_LANGUAGE } from "../shared/state.js";
 
 type AppStateStoreOptions = {
   saveRoot: string | null;
@@ -15,6 +17,7 @@ type AppStateStoreOptions = {
   acceptedDisclosureVersion?: number | null;
   currentDisclosureVersion?: number;
   autoStartWatcher?: boolean;
+  language?: AppLanguage;
   maxLogs?: number;
   now?: () => Date;
 };
@@ -50,6 +53,7 @@ export class AppStateStore {
       autoStartWatcher: options.autoStartWatcher ?? false,
       consentPersistenceStatus: "idle",
       consentPersistenceMessage: null,
+      language: options.language ?? DEFAULT_APP_LANGUAGE,
       privacyNotice: null,
       logs: [],
     };

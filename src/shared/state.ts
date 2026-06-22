@@ -1,6 +1,14 @@
 // abstract: Serializable state contracts shared by Electron main, preload, and renderer code.
 // out_of_scope: State mutation, IPC transport, and filesystem watching.
 
+import type { AppLanguage } from "./language.js";
+
+export type { AppLanguage } from "./language.js";
+export {
+  DEFAULT_APP_LANGUAGE,
+  SUPPORTED_APP_LANGUAGES,
+} from "./language.js";
+
 export type WatcherStatus = "starting" | "running" | "stopping" | "stopped" | "error";
 
 export type UploadStatus =
@@ -51,6 +59,7 @@ export type AppStateSnapshot = {
   autoStartWatcher: boolean;
   consentPersistenceStatus: ConsentPersistenceStatus;
   consentPersistenceMessage: string | null;
+  language: AppLanguage;
   privacyNotice: string | null;
   logs: AppLogEntry[];
 };

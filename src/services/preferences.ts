@@ -3,12 +3,18 @@
 
 import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
+import {
+  type AppLanguage,
+  DEFAULT_APP_LANGUAGE,
+  isSupportedAppLanguage,
+} from "../shared/language.js";
 
 export type UserPreferences = {
   schemaVersion: 1;
   thirdPartyUploadDisclosureVersion: number | null;
   autoStartWatcher: boolean;
   acceptedAt: string | null;
+  language: AppLanguage;
 };
 
 export type PreferencesLoadResult = {
@@ -29,6 +35,7 @@ export const DEFAULT_USER_PREFERENCES: UserPreferences = {
   thirdPartyUploadDisclosureVersion: null,
   autoStartWatcher: false,
   acceptedAt: null,
+  language: DEFAULT_APP_LANGUAGE,
 };
 
 const PREFERENCES_FILE_NAME = "preferences.json";
@@ -115,8 +122,12 @@ function parsePreferences(value: unknown): UserPreferences {
   if (value.acceptedAt !== null && typeof value.acceptedAt !== "string") {
     throw new Error("Invalid accepted timestamp.");
   }
+  const language = value.language ?? DEFAULT_USER_PREFERENCES.language;
+  if (!isSupportedAppLanguage(language)) {
+    throw new Error("Invalid language preference.");
+  }
 
-  return normalizePreferences(value as UserPreferences);
+  return normalizePreferences({ ...(value as UserPreferences), language });
 }
 
 function normalizePreferences(preferences: UserPreferences): UserPreferences {
@@ -125,6 +136,7 @@ function normalizePreferences(preferences: UserPreferences): UserPreferences {
     thirdPartyUploadDisclosureVersion: preferences.thirdPartyUploadDisclosureVersion,
     autoStartWatcher: preferences.autoStartWatcher,
     acceptedAt: preferences.acceptedAt,
+    language: preferences.language,
   };
 }
 

@@ -34,6 +34,7 @@ function createUnauthorizedConsent(): ConsentController {
       thirdPartyUploadDisclosureVersion: null,
       autoStartWatcher: false,
       acceptedAt: null,
+      language: "en",
     },
   });
 }
@@ -45,6 +46,7 @@ function createAuthorizedConsent(autoStartWatcher: boolean): ConsentController {
       thirdPartyUploadDisclosureVersion: CURRENT_DISCLOSURE_VERSION,
       autoStartWatcher,
       acceptedAt: "2026-06-20T00:00:00.000Z",
+      language: "en",
     },
   });
 }
@@ -60,6 +62,7 @@ function createController(options: {
     start: () => Promise<void>;
     stop: () => Promise<void>;
     uploadLatestSave: () => Promise<void>;
+    uploadSave: (savePath: string, reason: string) => Promise<void>;
     openMap: () => Promise<void>;
     close: () => Promise<{ fileProvided: boolean }>;
     prepareForRevocation?: () => Promise<{
@@ -75,6 +78,7 @@ function createController(options: {
       start: vi.fn().mockResolvedValue(undefined),
       stop: vi.fn().mockResolvedValue(undefined),
       uploadLatestSave: vi.fn().mockResolvedValue(undefined),
+      uploadSave: vi.fn().mockResolvedValue(undefined),
       openMap: vi.fn().mockResolvedValue(undefined),
       close: vi.fn().mockResolvedValue({ fileProvided: false }),
       prepareForRevocation: vi.fn().mockResolvedValue({
@@ -200,6 +204,7 @@ describe("AppRuntimeController", () => {
         }),
         stop: vi.fn().mockResolvedValue(undefined),
         uploadLatestSave: vi.fn().mockResolvedValue(undefined),
+        uploadSave: vi.fn().mockResolvedValue(undefined),
         openMap: vi.fn().mockResolvedValue(undefined),
         close: vi.fn().mockResolvedValue({ fileProvided: false }),
       },
@@ -240,6 +245,106 @@ describe("AppRuntimeController", () => {
     expect(state.getSnapshot()).toMatchObject({
       autoStartWatcher: false,
       saveRoot: "C:\\Saves",
+    });
+  });
+
+  it("persists language changes without scanning saves or opening the map", async () => {
+    const savedPreferences: UserPreferences[] = [];
+    const resolveSaveRoot = vi.fn(() => "C:\\Saves");
+    const { controller, createUploader, createWatcher, state } = createController({
+      consent: createUnauthorizedConsent(),
+      resolveSaveRoot,
+      savePreferences: async (preferences) => {
+        savedPreferences.push(preferences);
+      },
+    });
+
+    await (
+      controller as unknown as {
+        setLanguage: (language: "en" | "zh-CN") => Promise<unknown>;
+      }
+    ).setLanguage("zh-CN");
+
+    expect(savedPreferences.at(-1)).toMatchObject({ language: "zh-CN" });
+    expect(resolveSaveRoot).not.toHaveBeenCalled();
+    expect(createUploader).not.toHaveBeenCalled();
+    expect(createWatcher).not.toHaveBeenCalled();
+    expect(state.getSnapshot()).toMatchObject({
+      language: "zh-CN",
+      consentRequired: true,
+    });
+  });
+
+  it("keeps the current language when language persistence fails", async () => {
+    const { controller, state } = createController({
+      consent: createAuthorizedConsent(false),
+      savePreferences: vi.fn().mockRejectedValue(new Error("settings locked")),
+    });
+
+    await (
+      controller as unknown as {
+        setLanguage: (language: "en" | "zh-CN") => Promise<unknown>;
+      }
+    ).setLanguage("zh-CN");
+
+    expect(state.getSnapshot()).toMatchObject({
+      language: "en",
+      consentPersistenceStatus: "error",
+      consentPersistenceMessage: expect.stringContaining("settings locked"),
+    });
+  });
+
+  it("reloads an existing authorized map with the selected language without scanning saves", async () => {
+    const resolveSaveRoot = vi.fn(() => "C:\\Saves");
+    const { controller, createWatcher, state, uploader } = createController({
+      consent: createAuthorizedConsent(false),
+      resolveSaveRoot,
+    });
+
+    await controller.startAfterLaunch();
+    uploader.openMap.mockClear();
+    await (
+      controller as unknown as {
+        setLanguage: (language: "en" | "zh-CN") => Promise<unknown>;
+      }
+    ).setLanguage("zh-CN");
+
+    expect(uploader.openMap).toHaveBeenCalledTimes(1);
+    expect(resolveSaveRoot).not.toHaveBeenCalled();
+    expect(createWatcher).not.toHaveBeenCalled();
+    expect(state.getSnapshot()).toMatchObject({ language: "zh-CN" });
+  });
+
+  it("uploads the currently opened save again when language changes", async () => {
+    const resolveSaveRoot = vi.fn(() => "C:\\Saves");
+    const currentSave = "C:\\Saves\\previously-opened.sav";
+    const { controller, createWatcher, state, uploader } = createController({
+      consent: createAuthorizedConsent(false),
+      resolveSaveRoot,
+    });
+
+    await controller.startAfterLaunch();
+    state.update({ latestSavePath: currentSave });
+    uploader.openMap.mockClear();
+
+    await (
+      controller as unknown as {
+        setLanguage: (language: "en" | "zh-CN") => Promise<unknown>;
+      }
+    ).setLanguage("zh-CN");
+
+    expect(uploader.upload).toHaveBeenCalledWith(
+      currentSave,
+      expect.objectContaining({ generation: expect.any(Number) }),
+    );
+    expect(uploader.openMap).not.toHaveBeenCalled();
+    expect(resolveSaveRoot).not.toHaveBeenCalled();
+    expect(createWatcher).not.toHaveBeenCalled();
+    expect(state.getSnapshot()).toMatchObject({
+      language: "zh-CN",
+      latestSavePath: currentSave,
+      uploadStatus: "success",
+      lastUploadResult: "success",
     });
   });
 
@@ -335,6 +440,7 @@ describe("AppRuntimeController", () => {
         start: vi.fn().mockResolvedValue(undefined),
         stop: vi.fn().mockResolvedValue(undefined),
         uploadLatestSave: vi.fn().mockResolvedValue(undefined),
+        uploadSave: vi.fn().mockResolvedValue(undefined),
         openMap: vi.fn().mockResolvedValue(undefined),
         close: vi.fn().mockResolvedValue({ fileProvided: true }),
         prepareForRevocation: async () => {

@@ -3,6 +3,8 @@
 
 import { Pause, Play, ShieldOff, Upload } from "lucide-react";
 import type * as React from "react";
+import type { AppLanguage } from "../../shared/state.js";
+import { LanguageSwitcher } from "../components/language-switcher.js";
 import { SummaryCard } from "../components/summary-card.js";
 import { Alert, AlertDescription, AlertTitle } from "../components/ui/alert.js";
 import {
@@ -24,76 +26,85 @@ import {
   TooltipTrigger,
 } from "../components/ui/tooltip.js";
 import type { SatisfactoryAppCommands } from "../hooks/use-satisfactory-app.js";
+import type { RendererCopy } from "../i18n.js";
 import type { DashboardViewModel } from "../view-model.js";
 
 type DashboardViewProps = {
   model: DashboardViewModel;
+  copy: RendererCopy;
+  language: AppLanguage;
   commands: Pick<
     SatisfactoryAppCommands,
-    "disableUploadsAndExit" | "startWatcher" | "stopWatcher" | "uploadLatestSave"
+    "disableUploadsAndExit" | "setLanguage" | "startWatcher" | "stopWatcher" | "uploadLatestSave"
   >;
 };
 
-export function DashboardView({ commands, model }: DashboardViewProps) {
+export function DashboardView({ commands, copy, language, model }: DashboardViewProps) {
   return (
     <main className="min-h-screen w-[var(--layout-sidebar-width)] border-r border-border bg-background p-4 text-foreground">
       <section className="flex min-h-[calc(100vh-32px)] flex-col gap-3">
-        <header>
-          <h1 className="text-[22px] font-bold leading-tight tracking-normal">Map watcher</h1>
-        </header>
-
         <TooltipProvider>
-          <section aria-label="Watcher commands" className="flex flex-col gap-2">
+          <header className="flex items-center justify-between gap-3">
+            <h1 className="text-[22px] font-bold leading-tight tracking-normal">
+              {copy.dashboard.title}
+            </h1>
+            <LanguageSwitcher
+              copy={copy.language}
+              language={language}
+              onLanguageChange={(nextLanguage) => void commands.setLanguage(nextLanguage)}
+            />
+          </header>
+
+          <section aria-label={copy.dashboard.commandsLabel} className="flex flex-col gap-2">
             {model.showStartButton ? (
-              <CommandTooltip description="Scan the save folder and upload new saves automatically.">
+              <CommandTooltip description={copy.dashboard.startTooltip}>
                 <Button disabled={model.startDisabled} onClick={() => void commands.startWatcher()}>
                   <Play className="h-4 w-4" aria-hidden="true" />
-                  Start watching
+                  {copy.dashboard.start}
                 </Button>
               </CommandTooltip>
             ) : null}
             {model.showStopButton ? (
-              <CommandTooltip description="Stop automatic monitoring. Manual uploads remain available.">
+              <CommandTooltip description={copy.dashboard.stopTooltip}>
                 <Button disabled={model.stopDisabled} onClick={() => void commands.stopWatcher()}>
                   <Pause className="h-4 w-4" aria-hidden="true" />
-                  Pause watching
+                  {copy.dashboard.stop}
                 </Button>
               </CommandTooltip>
             ) : null}
-            <CommandTooltip description="Upload the newest detected save to update the map once.">
+            <CommandTooltip description={copy.dashboard.uploadTooltip}>
               <Button
                 disabled={model.uploadDisabled}
                 onClick={() => void commands.uploadLatestSave()}
               >
                 <Upload className="h-4 w-4" aria-hidden="true" />
-                Upload latest save
+                {copy.dashboard.upload}
               </Button>
             </CommandTooltip>
           </section>
 
-          <SummaryCard label="Currently opened save" title={model.latestSaveTitle} />
+          <SummaryCard label={copy.dashboard.currentSaveLabel} title={model.latestSaveTitle} />
 
           <AlertDialog>
-            <CommandTooltip description="Stops future uploads and exits the app. Files already provided to the third-party page cannot be taken back.">
+            <CommandTooltip description={copy.dashboard.disableTooltip}>
               <AlertDialogTrigger asChild>
                 <Button variant="destructive">
                   <ShieldOff className="h-4 w-4" aria-hidden="true" />
-                  Disable uploads
+                  {copy.dashboard.disable}
                 </Button>
               </AlertDialogTrigger>
             </CommandTooltip>
             <AlertDialogContent className="left-4 w-[calc(var(--layout-sidebar-width)_-_32px)] translate-x-0">
               <AlertDialogHeader>
-                <AlertDialogTitle>Disable uploads and exit?</AlertDialogTitle>
+                <AlertDialogTitle>{copy.dashboard.disableDialogTitle}</AlertDialogTitle>
                 <AlertDialogDescription>
-                  This stops future uploads and exits the app. It cannot take back a save file
-                  already provided to the third-party page.
+                  {copy.dashboard.disableDialogDescription}
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogCancel>{copy.dashboard.cancel}</AlertDialogCancel>
                 <AlertDialogAction onClick={() => void commands.disableUploadsAndExit()}>
-                  Confirm
+                  {copy.dashboard.confirm}
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
@@ -103,7 +114,7 @@ export function DashboardView({ commands, model }: DashboardViewProps) {
         {model.showIssue ? (
           <Alert role="alert" variant="destructive">
             <span className="block text-xs font-bold uppercase text-destructive">
-              Needs attention
+              {copy.dashboard.needsAttention}
             </span>
             <AlertTitle className="mt-2">{model.issueTitle}</AlertTitle>
             {model.issueDetail ? <AlertDescription>{model.issueDetail}</AlertDescription> : null}
