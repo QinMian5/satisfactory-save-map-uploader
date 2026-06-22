@@ -1,0 +1,55 @@
+# abstract: GitHub Actions CI for checks, type validation, tests, and Windows packaging.
+# out_of_scope: Release creation, code signing, and Store submission.
+
+name: CI
+
+on:
+  pull_request:
+  push:
+
+permissions:
+  contents: read
+
+jobs:
+  windows:
+    name: Windows
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - name: Enable pnpm
+        shell: pwsh
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.33.0 --activate
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      - name: Check
+        run: pnpm run check
+      - name: Build
+        run: pnpm run build
+      - name: Package
+        run: pnpm run package
+      - name: Verify package
+        run: pnpm run verify:package
+
+  linux:
+    name: Linux
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - name: Enable pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.33.0 --activate
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      - name: Check
+        run: pnpm run check

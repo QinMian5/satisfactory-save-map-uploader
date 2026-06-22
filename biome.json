@@ -2,13 +2,26 @@
   "$schema": "https://biomejs.dev/schemas/2.5.0/schema.json",
   "files": {
     "ignoreUnknown": true,
-    "includes": ["**", "!**/node_modules", "!**/dist"]
+    "includes": [
+      "**",
+      "!**/node_modules",
+      "!**/.venv",
+      "!**/dist",
+      "!**/.webpack",
+      "!**/.vite",
+      "!**/out"
+    ]
   },
   "formatter": {
     "enabled": true,
     "indentStyle": "space",
     "indentWidth": 2,
     "lineWidth": 100
+  },
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
+    }
   },
   "linter": {
     "enabled": true,
