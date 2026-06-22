@@ -54,6 +54,7 @@ describe("build configuration", () => {
       expect(workflow).toContain("corepack enable");
       expect(workflow).toContain("corepack prepare pnpm@10.33.0 --activate");
       expect(workflow).not.toContain("cache: pnpm");
+      expect(workflow).toContain("package-manager-cache: false");
     }
   });
 
