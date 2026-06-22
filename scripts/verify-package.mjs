@@ -10,7 +10,8 @@ import asar from "@electron/asar";
 
 const execFileAsync = promisify(execFile);
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const PACKAGE_DIR = path.join(ROOT, "out", "Satisfactory Save Map Watcher-win32-x64");
+const OUT_DIR = path.join(ROOT, "out");
+const EXPECTED_PACKAGE_DIR_NAME = "Satisfactory Save Map Watcher-win32-x64";
 const EXE_NAME = "SatisfactorySaveMapWatcher.exe";
 const MAKE_DIR = path.join(ROOT, "out", "make", "squirrel.windows", "x64");
 const REQUIRED_PACKAGE_FILES = [
@@ -99,6 +100,48 @@ export function getPackagedMetadataIssues(rootPackageJson, packagedPackageJson) 
   return issues;
 }
 
+export async function findUnpackedPackageDirectory(outRoot) {
+  const expectedPath = path.join(outRoot, EXPECTED_PACKAGE_DIR_NAME);
+  const expectedCandidate = (await isUnpackedPackageDirectory(expectedPath)) ? expectedPath : null;
+  if (expectedCandidate) {
+    return expectedCandidate;
+  }
+
+  const entries = await fs.readdir(outRoot, { withFileTypes: true }).catch(() => []);
+  const candidates = [];
+  for (const entry of entries) {
+    if (!entry.isDirectory()) {
+      continue;
+    }
+
+    const candidate = path.join(outRoot, entry.name);
+    if (await isUnpackedPackageDirectory(candidate)) {
+      candidates.push(candidate);
+    }
+  }
+
+  if (candidates.length === 1) {
+    return candidates[0];
+  }
+  if (candidates.length > 1) {
+    throw new Error(`Multiple unpacked package directories found:\n${candidates.join("\n")}`);
+  }
+
+  const available = entries.filter((entry) => entry.isDirectory()).map((entry) => entry.name);
+  throw new Error(
+    `Missing unpacked package directory under ${outRoot}. Available directories: ${
+      available.length > 0 ? available.join(", ") : "none"
+    }`,
+  );
+}
+
+async function isUnpackedPackageDirectory(candidate) {
+  return (
+    (await pathExists(path.join(candidate, EXE_NAME))) &&
+    (await pathExists(path.join(candidate, "resources", "app.asar")))
+  );
+}
+
 function normalizeArtifactPath(candidate) {
   return candidate.replaceAll("\\", "/").replace(/^\/+/, "").toLowerCase();
 }
@@ -119,20 +162,20 @@ async function main() {
 
 async function verifyPackage() {
   const packageJson = await readPackageJson();
-  const exePath = path.join(PACKAGE_DIR, EXE_NAME);
-  const appAsarPath = path.join(PACKAGE_DIR, "resources", "app.asar");
-  const resourcesAppPath = path.join(PACKAGE_DIR, "resources", "app");
+  const packageDir = await findUnpackedPackageDirectory(OUT_DIR);
+  const exePath = path.join(packageDir, EXE_NAME);
+  const appAsarPath = path.join(packageDir, "resources", "app.asar");
+  const resourcesAppPath = path.join(packageDir, "resources", "app");
 
-  await assertPathExists(PACKAGE_DIR, "Unpacked package directory");
   for (const requiredFile of REQUIRED_PACKAGE_FILES) {
-    await assertPathExists(path.join(PACKAGE_DIR, requiredFile), requiredFile);
+    await assertPathExists(path.join(packageDir, requiredFile), requiredFile);
   }
   if (await pathExists(resourcesAppPath)) {
     throw new Error(`Forbidden unpacked app directory exists: ${resourcesAppPath}`);
   }
 
-  const physicalFiles = await listFiles(PACKAGE_DIR);
-  const physicalRelative = physicalFiles.map((file) => path.relative(PACKAGE_DIR, file));
+  const physicalFiles = await listFiles(packageDir);
+  const physicalRelative = physicalFiles.map((file) => path.relative(packageDir, file));
   const asarEntries = asar
     .listPackage(appAsarPath)
     .map((entry) => `resources/app.asar/${entry.replace(/^\/+/, "")}`);
@@ -161,10 +204,10 @@ async function verifyPackage() {
     throw new Error(`Production source maps found:\n${sourceMaps.examples.join("\n")}`);
   }
 
-  const packageSize = await getDirectorySize(PACKAGE_DIR);
+  const packageSize = await getDirectorySize(packageDir);
   const appAsarStats = await fs.stat(appAsarPath);
-  const largestFiles = await getLargestFiles(PACKAGE_DIR, 20);
-  const electronVersion = await readTextIfExists(path.join(PACKAGE_DIR, "version"));
+  const largestFiles = await getLargestFiles(packageDir, 20);
+  const electronVersion = await readTextIfExists(path.join(packageDir, "version"));
   const fuseOutput = await readFuses(exePath);
   const fuses = parseFuseReadOutput(fuseOutput);
   assertExpectedFuses(fuses);
@@ -172,7 +215,7 @@ async function verifyPackage() {
   const suspectedBrowsers = findSuspectedBrowserArtifacts(physicalRelative);
 
   console.log("Package verification passed.");
-  console.log(`Unpacked package: ${PACKAGE_DIR}`);
+  console.log(`Unpacked package: ${packageDir}`);
   console.log(`Unpacked package size: ${formatBytes(packageSize)}`);
   console.log(`app.asar size: ${formatBytes(appAsarStats.size)}`);
   console.log(`Electron version: ${electronVersion.trim() || "unknown"}`);
@@ -189,7 +232,7 @@ async function verifyPackage() {
   );
   console.log("Largest files:");
   for (const file of largestFiles) {
-    console.log(`  ${formatBytes(file.size)}  ${path.relative(PACKAGE_DIR, file.path)}`);
+    console.log(`  ${formatBytes(file.size)}  ${path.relative(packageDir, file.path)}`);
   }
 }
 

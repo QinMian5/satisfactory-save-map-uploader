@@ -1,9 +1,13 @@
 // abstract: Tests for package verification helpers without requiring a built Electron package.
 // out_of_scope: Real packaged app inspection, Authenticode checks, and checksum file creation.
 
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   findForbiddenArtifacts,
+  findUnpackedPackageDirectory,
   getPackagedMetadataIssues,
   parseFuseReadOutput,
   summarizeSourceMaps,
@@ -101,5 +105,20 @@ Fuse Version: v1
     ).toEqual([
       "Packaged package.json type must be commonjs for the Vite main bundle, got module.",
     ]);
+  });
+
+  it("discovers the unpacked package directory from required package files", async () => {
+    const tempRoot = await mkdtemp(path.join(tmpdir(), "verify-package-"));
+    try {
+      const outRoot = path.join(tempRoot, "out");
+      const packageRoot = path.join(outRoot, "Unexpected Forge Name-win32-x64");
+      await mkdir(path.join(packageRoot, "resources"), { recursive: true });
+      await writeFile(path.join(packageRoot, "SatisfactorySaveMapWatcher.exe"), "");
+      await writeFile(path.join(packageRoot, "resources", "app.asar"), "");
+
+      await expect(findUnpackedPackageDirectory(outRoot)).resolves.toBe(packageRoot);
+    } finally {
+      await rm(tempRoot, { recursive: true, force: true });
+    }
   });
 });
