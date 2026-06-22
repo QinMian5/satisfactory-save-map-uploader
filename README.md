@@ -11,7 +11,7 @@ This project is not affiliated with, endorsed by, or sponsored by Coffee Stain S
 
 ## For Users
 
-Install the Windows test build from the generated Squirrel installer when one is provided. The V1 app opens a first-run permission gate before showing the watcher dashboard. After permission is granted, the dashboard shows watcher state, latest save, upload result, and upload permission controls.
+Install the Windows test build from the generated Squirrel installer when one is provided. The V1 app opens a first-run permission gate before showing the watcher dashboard. After permission is granted, the dashboard shows the current save and the main watcher/upload controls.
 
 On first launch, the app does not scan saves, open the map page, or upload anything until you choose **Allow uploads**. That choice allows the app to provide selected `.sav` files to the third-party Satisfactory Calculator map page for processing, but the watcher stays stopped until you click **Start watcher**. Choosing **Not now, exit** closes the app without saving permission or starting the watcher.
 
@@ -20,9 +20,9 @@ Available actions:
 - Start watcher
 - Stop watcher
 - Upload latest save
-- Revoke third-party upload permission
+- Disable uploads
 
-Stop watcher is temporary and preserves permission. Revoke permission stops future automatic uploads, records a local revoked state that takes priority on restart, and shows a locked permission view until uploads are allowed again. Revocation cannot take back a save file that was already provided to the third-party page.
+Stop watcher is temporary and preserves permission. Disable uploads stops future automatic uploads, records a local revoked state that takes priority on restart, and returns to the permission gate until uploads are allowed again. This cannot take back a save file that was already provided to the third-party page.
 
 Unsigned GitHub beta installers can trigger Windows SmartScreen warnings.
 

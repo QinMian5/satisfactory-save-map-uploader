@@ -31,7 +31,7 @@ out_of_scope: Automatic updates, tray behavior, commercial signing, MSIX generat
 
 ## Design Approach
 
-- **Approach:** An Electron application starts a local status window, loads local consent preferences, and starts the save watcher only after the current third-party upload disclosure has been accepted. Business services are separated from Electron window lifecycle and renderer presentation.
+- **Approach:** An Electron application starts a local status window, loads local consent preferences, opens the embedded map only after the current third-party upload disclosure has been accepted, and starts save watching only after the user requests monitoring in the current session. Business services are separated from Electron window lifecycle and renderer presentation.
 - **Key Elements:**
   - `src/main/app.ts` wires Electron lifecycle, Squirrel startup handling, single-instance lock, status window, embedded map view, state, IPC handlers, and service cleanup.
   - `src/main/lifecycle.ts` contains pure startup, smoke-mode, lock, and second-instance focus decisions.
@@ -48,11 +48,11 @@ out_of_scope: Automatic updates, tray behavior, commercial signing, MSIX generat
   - `src/services/preferences.ts` owns UTF-8 JSON preference persistence under Electron `userData`, schema validation, safe defaults, and atomic temp-file rename writes.
   - `src/services/revocation-marker.ts` owns the authoritative local revocation marker, marker schema validation, safe defaults, atomic temp-file rename writes, and marker removal confirmation.
   - `src/services/consent-controller.ts` owns the current disclosure version, accepted version, auto-start preference, and upload generation tokens.
-  - `src/services/save-watcher.ts` owns watcher start/stop lifecycle, startup upload, debounce, upload serialization, latest-wins coalescing, and missing-directory handling.
+  - `src/services/save-watcher.ts` owns watcher start/stop lifecycle, initial upload after watcher start, debounce, upload serialization, latest-wins coalescing, and missing-directory handling.
   - `src/services/save-uploader.ts` owns Electron Chromium upload automation through `webContents.debugger` and Chrome DevTools Protocol.
   - `src/saves.ts` resolves the default save root and recursively finds the most recently modified game `.sav` file, excluding Satisfactory server manager metadata files.
   - `src/debounce.ts` provides small debounced async task runners for coalescing rapid save events, including a cancelable variant for stop and quit cleanup.
-  - `src/renderer/` contains the React, Tailwind CSS, and shadcn-style component code for the first-run permission gate, the watcher dashboard, the revoked-permission locked view, status display, and command buttons.
+  - `src/renderer/` contains the React, Tailwind CSS, and shadcn-style component code for the permission gate, the watcher dashboard, concise status display, and command buttons.
   - `src/renderer/view-model.ts` selects the active renderer view and maps detailed watcher/upload state to primary user-facing status copy.
   - `src/shared/` contains serializable state and IPC contracts.
   - `forge.config.ts` configures Electron Forge Vite, Squirrel maker, ASAR, and Electron fuses.
@@ -70,13 +70,13 @@ out_of_scope: Automatic updates, tray behavior, commercial signing, MSIX generat
 - Startup authorization first evaluates the revocation marker. A valid marker, damaged marker, unreadable marker, or uncertain marker state is treated as unauthorized. Only an absent marker allows the preferences schema and current disclosure version to authorize uploads.
 - Accepting the current disclosure writes accepted preferences, verifies the accept intent is still current, clears and confirms the revocation marker is absent, verifies the intent again, then updates in-memory consent and opens the map while leaving the watcher stopped.
 - Choosing Not now exits the application without persisting preferences, resolving the save root, scanning saves, starting the watcher, creating the map window, or loading the third-party map page.
-- After current permission has been accepted, the app loads the map page on launch, but the watcher always starts stopped. Legacy `autoStartWatcher: true` preferences are ignored.
+- After current permission has been accepted, the app loads the map page on launch, and the watcher starts stopped for each app session.
 - User Stop stops automatic file watching without revoking upload permission. User Start starts scanning/uploading for the current session only.
 - Revoke immediately disables in-memory upload consent, increments the upload generation, cancels pending or active upload work, stops the watcher, writes the revocation marker before map-window/session cleanup, then normalizes accepted preferences. The consent mutation queue serializes Accept and Revoke persistence while generation checks make stale operations unable to reopen the gate.
 - If the revocation marker is saved, revocation remains effective across restarts even if preferences normalization fails. If marker writing fails, revoked preferences are used as a fallback persistent invalidation. If both persistent invalidation paths fail, the current process remains unauthorized and the status window reports that restart behavior cannot be guaranteed until revoke succeeds.
-- Revoked or uncertain permission state displays a locked permission view instead of the watcher dashboard. The locked view allows the user to grant permission again or exit the app.
+- Revoked or uncertain permission state displays the permission gate. The watcher dashboard is available only when upload permission is granted, and the permission gate allows the user to grant permission again or exit the app.
 - If the default save root is unavailable, the status window remains open, watcher status becomes `error`, and logs show the checked directory.
-- Startup continues watching when the save root exists but no game `.sav` files are present.
+- Watcher start continues monitoring when the save root exists but no game `.sav` files are present.
 - Save events are debounced by approximately 2 seconds.
 - Uploads are serialized. A save event during an upload is coalesced and processed after the active upload by rescanning for the latest save.
 - Stop immediately closes the filesystem watcher, cancels pending debounce work, drops pending automatic uploads, and does not interrupt an already active upload.

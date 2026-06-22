@@ -25,13 +25,13 @@ This test provides a `.sav` file to the third-party Satisfactory Calculator webs
 12. Click Stop, restart the app, and confirm watcher remains stopped.
 13. Click Start, restart the app, and confirm watcher starts stopped until Start is clicked again.
 14. While stopped, click Upload latest save and confirm manual upload still works after permission has been granted.
-15. Click Revoke permission and confirm later automatic uploads stop.
-16. Restart after revoke and confirm the locked permission view appears before any scan or upload.
+15. Click Disable uploads and confirm later automatic uploads stop.
+16. Restart after revoke and confirm the permission gate appears before any scan or upload.
 17. Simulate a preferences write failure during revoke and confirm the old authorization does not silently recover on restart.
 18. Corrupt the preferences file while revoked and confirm the app safely returns to the unauthorized state.
 19. Click Allow uploads again after revoke, then click Start and confirm uploads resume only after local revoked state is cleared.
 20. Run `pnpm run integration:package` and confirm the local synthetic Electron/CDP upload test succeeds without real saves or real website access.
-21. Start an upload, revoke permission, and confirm the message accurately distinguishes whether the file may already have been provided to the third-party page.
+21. Start an upload, click Disable uploads, and confirm the message accurately distinguishes whether the file may already have been provided to the third-party page.
 22. Disconnect the network and confirm the app reports a clear page-load or upload error.
 23. If the website changes selectors, confirm the app reports a clear selector or DOM-state error instead of crashing.
 24. Close the main status window and confirm all app, Electron, Chromium, and Node processes exit.

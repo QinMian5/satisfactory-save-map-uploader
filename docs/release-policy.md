@@ -7,7 +7,7 @@ out_of_scope: Runtime application behavior, Store listing text, and vulnerabilit
 
 ## CI
 
-Pull requests and pushes run with default `contents: read` permission. Windows CI runs install, checks, build validation, Electron packaging, and package verification because the product targets Windows. Linux CI runs install and checks.
+Pull requests and pushes run with default `contents: read` permission. Windows CI runs install, checks, build validation, Electron packaging, and package verification because the product targets Windows.
 
 ## GitHub Beta Builds
 

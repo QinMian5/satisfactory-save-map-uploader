@@ -22,17 +22,19 @@ As a Satisfactory player, I want the tool to locate my local game saves so that 
 
 The system SHALL discover Satisfactory save files from the default local save location for the supported operating environment.
 
-### R-002: Startup map loading
+### R-002: User-controlled initial save loading
 
-As a Satisfactory player, I want the tool to load my latest save when it starts so that the map reflects my current game without requiring a new in-game save event.
+As a Satisfactory player, I want the tool to wait for my current-session action before selecting a save for upload so that granting permission does not immediately provide a file to the map page.
 
-After third-party upload permission has been granted, when at least one save file exists, the system SHALL select the most recently modified save file during startup and submit it to the map workflow.
+After third-party upload permission has been granted, the system SHALL wait for an explicit user action in the current session before selecting a local save file for upload.
+
+When the user starts watching or requests a manual upload, and at least one save file exists, the system SHALL select the most recently modified save file and submit it to the map workflow.
 
 ### R-003: Continuous save monitoring
 
-As a Satisfactory player, I want the map to update after the game saves so that the map follows my current factory state.
+As a Satisfactory player, I want the map to update after the game saves while I have enabled monitoring so that the map follows my current factory state.
 
-The system SHALL detect newly created or modified save files while running.
+The system SHALL detect newly created or modified save files while monitoring is enabled.
 
 The system SHALL wait briefly after a save change before selecting the latest save file for processing.
 
