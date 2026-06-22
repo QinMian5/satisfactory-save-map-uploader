@@ -14,6 +14,8 @@ const OUT_DIR = path.join(ROOT, "out");
 const EXPECTED_PACKAGE_DIR_NAME = "Satisfactory Save Map Watcher-win32-x64";
 const EXE_NAME = "SatisfactorySaveMapWatcher.exe";
 const MAKE_DIR = path.join(ROOT, "out", "make", "squirrel.windows", "x64");
+const DEFAULT_PACKAGE_DISCOVERY_TIMEOUT_MS = 60_000;
+const DEFAULT_PACKAGE_DISCOVERY_INTERVAL_MS = 500;
 const REQUIRED_PACKAGE_FILES = [
   EXE_NAME,
   "resources/app.asar",
@@ -100,11 +102,39 @@ export function getPackagedMetadataIssues(rootPackageJson, packagedPackageJson) 
   return issues;
 }
 
-export async function findUnpackedPackageDirectory(outRoot) {
+export async function findUnpackedPackageDirectory(outRoot, options = {}) {
+  const timeoutMs = options.timeoutMs ?? DEFAULT_PACKAGE_DISCOVERY_TIMEOUT_MS;
+  const intervalMs = options.intervalMs ?? DEFAULT_PACKAGE_DISCOVERY_INTERVAL_MS;
+  const deadline = Date.now() + timeoutMs;
+
+  let entries = [];
+  while (true) {
+    const result = await scanUnpackedPackageDirectory(outRoot);
+    entries = result.entries;
+    if (result.packageDir) {
+      return result.packageDir;
+    }
+
+    const remainingMs = deadline - Date.now();
+    if (remainingMs <= 0) {
+      break;
+    }
+    await delay(Math.min(intervalMs, remainingMs));
+  }
+
+  const available = entries.filter((entry) => entry.isDirectory()).map((entry) => entry.name);
+  throw new Error(
+    `Missing unpacked package directory under ${outRoot}. Available directories: ${
+      available.length > 0 ? available.join(", ") : "none"
+    }`,
+  );
+}
+
+async function scanUnpackedPackageDirectory(outRoot) {
   const expectedPath = path.join(outRoot, EXPECTED_PACKAGE_DIR_NAME);
   const expectedCandidate = (await isUnpackedPackageDirectory(expectedPath)) ? expectedPath : null;
   if (expectedCandidate) {
-    return expectedCandidate;
+    return { entries: [], packageDir: expectedCandidate };
   }
 
   const entries = await fs.readdir(outRoot, { withFileTypes: true }).catch(() => []);
@@ -121,18 +151,13 @@ export async function findUnpackedPackageDirectory(outRoot) {
   }
 
   if (candidates.length === 1) {
-    return candidates[0];
+    return { entries, packageDir: candidates[0] };
   }
   if (candidates.length > 1) {
     throw new Error(`Multiple unpacked package directories found:\n${candidates.join("\n")}`);
   }
 
-  const available = entries.filter((entry) => entry.isDirectory()).map((entry) => entry.name);
-  throw new Error(
-    `Missing unpacked package directory under ${outRoot}. Available directories: ${
-      available.length > 0 ? available.join(", ") : "none"
-    }`,
-  );
+  return { entries, packageDir: null };
 }
 
 async function isUnpackedPackageDirectory(candidate) {
@@ -140,6 +165,10 @@ async function isUnpackedPackageDirectory(candidate) {
     (await pathExists(path.join(candidate, EXE_NAME))) &&
     (await pathExists(path.join(candidate, "resources", "app.asar")))
   );
+}
+
+function delay(milliseconds) {
+  return new Promise((resolve) => setTimeout(resolve, milliseconds));
 }
 
 function normalizeArtifactPath(candidate) {

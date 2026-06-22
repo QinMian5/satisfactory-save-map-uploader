@@ -121,4 +121,26 @@ Fuse Version: v1
       await rm(tempRoot, { recursive: true, force: true });
     }
   });
+
+  it("waits for the unpacked package directory to appear", async () => {
+    const tempRoot = await mkdtemp(path.join(tmpdir(), "verify-package-"));
+    try {
+      const outRoot = path.join(tempRoot, "out");
+      const packageRoot = path.join(outRoot, "Delayed Forge Name-win32-x64");
+      const createPackage = async () => {
+        await mkdir(path.join(packageRoot, "resources"), { recursive: true });
+        await writeFile(path.join(packageRoot, "SatisfactorySaveMapWatcher.exe"), "");
+        await writeFile(path.join(packageRoot, "resources", "app.asar"), "");
+      };
+      setTimeout(() => {
+        void createPackage();
+      }, 20);
+
+      await expect(
+        findUnpackedPackageDirectory(outRoot, { intervalMs: 5, timeoutMs: 500 }),
+      ).resolves.toBe(packageRoot);
+    } finally {
+      await rm(tempRoot, { recursive: true, force: true });
+    }
+  });
 });
