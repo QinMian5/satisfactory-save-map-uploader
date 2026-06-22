@@ -52,10 +52,15 @@ describe("renderer disclosure UI", () => {
     const renderer = await readRendererText();
 
     expect(renderer).toContain("Latest save");
-    expect(renderer).toContain("Last map update");
     expect(renderer).toContain("Permission");
     expect(renderer).toContain("Start watching");
     expect(renderer).toContain("Pause watching");
+    expect(renderer).toContain("Upload latest save");
+    expect(renderer).not.toContain("StatusCard");
+    expect(renderer).not.toContain("Waiting for new saves");
+    expect(renderer).not.toContain("Watcher stopped");
+    expect(renderer).not.toContain("Last map update");
+    expect(renderer).not.toContain("Upload now");
     expect(renderer).not.toContain("Troubleshooting details");
     expect(renderer).not.toContain("Activity log");
     expect(renderer).not.toContain("Privacy & permissions");

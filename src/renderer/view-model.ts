@@ -1,21 +1,12 @@
 // abstract: Renderer-only view selection and user-facing status copy.
 // out_of_scope: DOM mutation, Electron IPC, and main-process state mutation.
 
-import type { AppStateSnapshot, UploadStatus, WatcherStatus } from "../shared/state.js";
+import type { AppStateSnapshot } from "../shared/state.js";
 
 export type RendererViewMode = "consent" | "dashboard" | "locked";
 
-export type PrimaryStatusTone = "neutral" | "working" | "success" | "warning" | "error";
-
-export type PrimaryStatusCopy = {
-  title: string;
-  detail: string;
-  tone: PrimaryStatusTone;
-};
-
 export type DashboardSummary = {
   latestSaveTitle: string;
-  lastUpdateTitle: string;
   issueTitle: string | null;
   issueDetail: string | null;
   showIssue: boolean;
@@ -24,10 +15,7 @@ export type DashboardSummary = {
 };
 
 export type DashboardViewModel = {
-  primaryStatus: PrimaryStatusCopy;
-  watcherStatus: WatcherStatus;
   latestSaveTitle: string;
-  lastUpdateTitle: string;
   issueTitle: string | null;
   issueDetail: string | null;
   showIssue: boolean;
@@ -47,72 +35,6 @@ export type LockedViewModel = {
   privacyNotice: string;
 };
 
-const UPLOAD_STATUS_TITLES: Record<UploadStatus, PrimaryStatusCopy> = {
-  idle: {
-    title: "Ready",
-    detail: "",
-    tone: "neutral",
-  },
-  "needs-consent": {
-    title: "Permission required",
-    detail: "",
-    tone: "warning",
-  },
-  "loading-page": {
-    title: "Opening map page",
-    detail: "",
-    tone: "working",
-  },
-  "selecting-file": {
-    title: "Selecting save file",
-    detail: "",
-    tone: "working",
-  },
-  processing: {
-    title: "Uploading latest save",
-    detail: "",
-    tone: "working",
-  },
-  success: {
-    title: "Map updated",
-    detail: "",
-    tone: "success",
-  },
-  error: {
-    title: "Upload needs attention",
-    detail: "",
-    tone: "error",
-  },
-};
-
-const WATCHER_STATUS_TITLES: Record<WatcherStatus, PrimaryStatusCopy> = {
-  starting: {
-    title: "Starting watcher",
-    detail: "",
-    tone: "working",
-  },
-  running: {
-    title: "Waiting for new saves",
-    detail: "",
-    tone: "neutral",
-  },
-  stopping: {
-    title: "Stopping watcher",
-    detail: "",
-    tone: "working",
-  },
-  stopped: {
-    title: "Watcher stopped",
-    detail: "",
-    tone: "neutral",
-  },
-  error: {
-    title: "Watcher needs attention",
-    detail: "",
-    tone: "error",
-  },
-};
-
 export function getRendererViewMode(state: AppStateSnapshot): RendererViewMode {
   if (state.permissionStatus === "granted") {
     return "dashboard";
@@ -123,33 +45,11 @@ export function getRendererViewMode(state: AppStateSnapshot): RendererViewMode {
   return "consent";
 }
 
-export function getPrimaryStatusCopy(state: AppStateSnapshot): PrimaryStatusCopy {
-  if (state.permissionStatus !== "granted") {
-    return state.permissionStatus === "revocation-save-failed"
-      ? {
-          title: "Permission revoked for this session",
-          detail: "",
-          tone: "error",
-        }
-      : {
-          title: "Permission required",
-          detail: "",
-          tone: "warning",
-        };
-  }
-
-  if (state.uploadStatus !== "idle") {
-    return UPLOAD_STATUS_TITLES[state.uploadStatus];
-  }
-  return WATCHER_STATUS_TITLES[state.watcherStatus];
-}
-
 export function getDashboardSummary(state: AppStateSnapshot): DashboardSummary {
   const issue = getDashboardIssue(state);
 
   return {
     latestSaveTitle: getSaveFileName(state.latestSavePath) ?? "No save selected",
-    lastUpdateTitle: getLastUpdateTitle(state),
     issueTitle: issue?.title ?? null,
     issueDetail: issue?.detail ?? null,
     showIssue: Boolean(issue),
@@ -164,10 +64,7 @@ export function getDashboardViewModel(
 ): DashboardViewModel {
   const summary = getDashboardSummary(state);
   return {
-    primaryStatus: getPrimaryStatusCopy(state),
-    watcherStatus: state.watcherStatus,
     latestSaveTitle: summary.latestSaveTitle,
-    lastUpdateTitle: summary.lastUpdateTitle,
     issueTitle: commandError ? "Command failed" : summary.issueTitle,
     issueDetail: commandError ?? summary.issueDetail,
     showIssue: summary.showIssue || Boolean(commandError),
@@ -218,16 +115,6 @@ function getDashboardIssue(state: AppStateSnapshot): { title: string; detail: st
   return null;
 }
 
-function getLastUpdateTitle(state: AppStateSnapshot): string {
-  if (state.lastUploadResult === "success") {
-    return "Map updated";
-  }
-  if (state.lastUploadResult === "error") {
-    return "Last update failed";
-  }
-  return "Not updated yet";
-}
-
 function getSaveFileName(savePath: string | null): string | null {
   if (!savePath) {
     return null;
@@ -235,7 +122,7 @@ function getSaveFileName(savePath: string | null): string | null {
   return savePath.split(/[\\/]/).pop() || savePath;
 }
 
-function isUploadBusy(uploadStatus: UploadStatus): boolean {
+function isUploadBusy(uploadStatus: AppStateSnapshot["uploadStatus"]): boolean {
   return (
     uploadStatus === "loading-page" ||
     uploadStatus === "selecting-file" ||

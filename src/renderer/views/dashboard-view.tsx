@@ -3,7 +3,6 @@
 
 import { Pause, Play, ShieldOff, Upload } from "lucide-react";
 import { PanelDisclosure } from "../components/panel-disclosure.js";
-import { StatusCard } from "../components/status-card.js";
 import { SummaryCard } from "../components/summary-card.js";
 import { Alert, AlertDescription, AlertTitle } from "../components/ui/alert.js";
 import {
@@ -37,8 +36,6 @@ export function DashboardView({ commands, model }: DashboardViewProps) {
           <h1 className="text-[22px] font-bold leading-tight tracking-normal">Map watcher</h1>
         </header>
 
-        <StatusCard status={model.primaryStatus} watcherStatus={model.watcherStatus} />
-
         <section aria-label="Watcher commands" className="flex flex-col gap-2">
           {model.showStartButton ? (
             <Button disabled={model.startDisabled} onClick={() => void commands.startWatcher()}>
@@ -58,12 +55,11 @@ export function DashboardView({ commands, model }: DashboardViewProps) {
           ) : null}
           <Button disabled={model.uploadDisabled} onClick={() => void commands.uploadLatestSave()}>
             <Upload className="h-4 w-4" aria-hidden="true" />
-            Upload now
+            Upload latest save
           </Button>
         </section>
 
         <SummaryCard label="Latest save" title={model.latestSaveTitle} />
-        <SummaryCard label="Last map update" title={model.lastUpdateTitle} />
 
         {model.showIssue ? (
           <Alert role="alert" variant="destructive">

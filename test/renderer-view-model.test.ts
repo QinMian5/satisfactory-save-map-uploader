@@ -7,7 +7,6 @@ import {
   getDashboardSummary,
   getDashboardViewModel,
   getLockedViewModel,
-  getPrimaryStatusCopy,
   getRendererViewMode,
 } from "../src/renderer/view-model.js";
 import type { AppStateSnapshot } from "../src/shared/state.js";
@@ -59,85 +58,6 @@ describe("renderer view model", () => {
     );
   });
 
-  it("summarizes noisy watcher and upload states into a primary user-facing status", () => {
-    expect(
-      getPrimaryStatusCopy(
-        state({
-          watcherStatus: "running",
-          uploadStatus: "idle",
-          permissionStatus: "granted",
-          consentRequired: false,
-        }),
-      ),
-    ).toMatchObject({
-      title: "Waiting for new saves",
-      detail: "",
-      tone: "neutral",
-    });
-    expect(
-      getPrimaryStatusCopy(
-        state({
-          uploadStatus: "processing",
-          permissionStatus: "granted",
-          consentRequired: false,
-        }),
-      ),
-    ).toMatchObject({
-      title: "Uploading latest save",
-      detail: "",
-      tone: "working",
-    });
-  });
-
-  it("does not show explanatory detail text in the primary status card", () => {
-    const uploadStates: AppStateSnapshot["uploadStatus"][] = [
-      "idle",
-      "needs-consent",
-      "loading-page",
-      "selecting-file",
-      "processing",
-      "success",
-      "error",
-    ];
-    const watcherStates: AppStateSnapshot["watcherStatus"][] = [
-      "starting",
-      "running",
-      "stopping",
-      "stopped",
-      "error",
-    ];
-
-    for (const uploadStatus of uploadStates) {
-      expect(
-        getPrimaryStatusCopy(
-          state({
-            uploadStatus,
-            permissionStatus: "granted",
-            consentRequired: false,
-          }),
-        ).detail,
-      ).toBe("");
-    }
-
-    for (const watcherStatus of watcherStates) {
-      expect(
-        getPrimaryStatusCopy(
-          state({
-            watcherStatus,
-            uploadStatus: "idle",
-            permissionStatus: "granted",
-            consentRequired: false,
-          }),
-        ).detail,
-      ).toBe("");
-    }
-
-    expect(getPrimaryStatusCopy(state({ permissionStatus: "not-granted" })).detail).toBe("");
-    expect(getPrimaryStatusCopy(state({ permissionStatus: "revocation-save-failed" })).detail).toBe(
-      "",
-    );
-  });
-
   it("maps dashboard state to concise user-facing summary fields", () => {
     expect(
       getDashboardSummary(
@@ -155,28 +75,11 @@ describe("renderer view model", () => {
       ),
     ).toEqual({
       latestSaveTitle: "Factory.sav",
-      lastUpdateTitle: "Map updated",
       issueTitle: null,
       issueDetail: null,
       showIssue: false,
       showStartButton: false,
       showStopButton: true,
-    });
-  });
-
-  it("keeps primary error copy short because the issue banner carries details", () => {
-    expect(
-      getPrimaryStatusCopy(
-        state({
-          uploadStatus: "error",
-          permissionStatus: "granted",
-          consentRequired: false,
-        }),
-      ),
-    ).toMatchObject({
-      title: "Upload needs attention",
-      detail: "",
-      tone: "error",
     });
   });
 
@@ -190,7 +93,6 @@ describe("renderer view model", () => {
       ),
     ).toMatchObject({
       latestSaveTitle: "No save selected",
-      lastUpdateTitle: "Not updated yet",
     });
   });
 
@@ -239,12 +141,14 @@ describe("renderer view model", () => {
 
     expect(model).toMatchObject({
       latestSaveTitle: "World.sav",
-      lastUpdateTitle: "Not updated yet",
       showStartButton: false,
       showStopButton: true,
       stopDisabled: false,
       uploadDisabled: true,
     });
+    expect(model).not.toHaveProperty("primaryStatus");
+    expect(model).not.toHaveProperty("watcherStatus");
+    expect(model).not.toHaveProperty("lastUpdateTitle");
     expect(model).not.toHaveProperty("diagnostics");
     expect(model).not.toHaveProperty("logs");
   });
