@@ -97,11 +97,11 @@ describe("renderer disclosure UI", () => {
     ]);
 
     expect(dashboard).toContain("copy.dashboard.title");
-    expect(i18n).toContain("Map watcher");
+    expect(i18n).toContain("Map uploader");
     expect(dashboard.match(/<CommandTooltip/g)?.length).toBe(4);
     expect(dashboard).not.toContain("Permission");
     expect(dashboard).not.toContain("app-kicker");
-    expect(dashboard).not.toContain("Satisfactory Save Map Watcher");
+    expect(dashboard).not.toContain("Satisfactory Save Map Uploader");
   });
 
   it("places disable uploads below the current save summary", async () => {

@@ -14,8 +14,8 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const PACKAGE_EXE = path.join(
   ROOT,
   "out",
-  "Satisfactory Save Map Watcher-win32-x64",
-  "SatisfactorySaveMapWatcher.exe",
+  "Satisfactory Save Map Uploader-win32-x64",
+  "SatisfactorySaveMapUploader.exe",
 );
 const SENTINEL = "SAFE_LOCAL_SYNTHETIC_SAV_TEST";
 const TIMEOUT_MS = 30_000;

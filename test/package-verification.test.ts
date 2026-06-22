@@ -8,6 +8,7 @@ import { describe, expect, it } from "vitest";
 import {
   findForbiddenArtifacts,
   findUnpackedPackageDirectory,
+  getExpectedMakeArtifacts,
   getPackagedMetadataIssues,
   parseFuseReadOutput,
   summarizeSourceMaps,
@@ -48,7 +49,7 @@ describe("package verification helpers", () => {
 
   it("parses expected fuse states from electron-fuses output", () => {
     expect(
-      parseFuseReadOutput(`Analyzing app: SatisfactorySaveMapWatcher.exe
+      parseFuseReadOutput(`Analyzing app: SatisfactorySaveMapUploader.exe
 Fuse Version: v1
   RunAsNode is Disabled
   EnableCookieEncryption is Enabled
@@ -83,9 +84,9 @@ Fuse Version: v1
   it("requires packaged metadata that can load the Vite main bundle", () => {
     expect(
       getPackagedMetadataIssues(
-        { name: "satisfactory-save-map-watcher", version: "0.1.0" },
+        { name: "satisfactory-save-map-uploader", version: "0.1.0" },
         {
-          name: "satisfactory-save-map-watcher",
+          name: "satisfactory-save-map-uploader",
           version: "0.1.0",
           main: ".vite/build/app.js",
           type: "commonjs",
@@ -94,9 +95,9 @@ Fuse Version: v1
     ).toEqual([]);
     expect(
       getPackagedMetadataIssues(
-        { name: "satisfactory-save-map-watcher", version: "0.1.0" },
+        { name: "satisfactory-save-map-uploader", version: "0.1.0" },
         {
-          name: "satisfactory-save-map-watcher",
+          name: "satisfactory-save-map-uploader",
           version: "0.1.0",
           main: ".vite/build/app.js",
           type: "module",
@@ -113,12 +114,19 @@ Fuse Version: v1
       const outRoot = path.join(tempRoot, "out");
       const packageRoot = path.join(outRoot, "Unexpected Forge Name-win32-x64");
       await mkdir(path.join(packageRoot, "resources"), { recursive: true });
-      await writeFile(path.join(packageRoot, "SatisfactorySaveMapWatcher.exe"), "");
+      await writeFile(path.join(packageRoot, "SatisfactorySaveMapUploader.exe"), "");
       await writeFile(path.join(packageRoot, "resources", "app.asar"), "");
 
       await expect(findUnpackedPackageDirectory(outRoot)).resolves.toBe(packageRoot);
     } finally {
       await rm(tempRoot, { recursive: true, force: true });
     }
+  });
+
+  it("expects AppX package artifacts", () => {
+    expect(getExpectedMakeArtifacts({ version: "0.1.0" })).toEqual({
+      makeDir: path.join("out", "make", "appx"),
+      files: [path.join("out", "make", "appx", "SatisfactorySaveMapUploader-0.1.0-x64.appx")],
+    });
   });
 });

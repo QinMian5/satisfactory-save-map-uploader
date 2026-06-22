@@ -5,7 +5,6 @@ import { appendFileSync, mkdirSync, mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { app, ipcMain } from "electron";
-import started from "electron-squirrel-startup";
 import { APP_METADATA } from "../../config/app-metadata.js";
 import { getDefaultSaveRoot } from "../saves.js";
 import { AppStateStore } from "../services/app-state.js";
@@ -28,7 +27,6 @@ import {
   hasIntegrationTestSwitch,
   hasSmokeTestArg,
   hasSmokeTestSwitch,
-  shouldExitForSquirrelStartup,
 } from "./lifecycle.js";
 import { AppRuntimeController } from "./runtime-controller.js";
 import { getMapResourcePolicyConfig } from "./security/map-resource-audit.js";
@@ -44,13 +42,8 @@ const smokeUserDataPath = configureSmokeUserDataPath();
 const integrationUserDataPath = configureIntegrationUserDataPath();
 smokeBootLog(`module-loaded argv=${JSON.stringify(process.argv)}`);
 
-if (shouldExitForSquirrelStartup(started)) {
-  smokeBootLog("squirrel-startup-exit");
-  app.quit();
-} else {
-  app.enableSandbox();
-  bootstrapElectronApp();
-}
+app.enableSandbox();
+bootstrapElectronApp();
 
 type AppRuntime = {
   statusWindow: Electron.BrowserWindow;

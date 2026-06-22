@@ -28,6 +28,7 @@ describe("build configuration", () => {
     expect(allDependencies).toHaveProperty("@vitejs/plugin-react");
     expect(allDependencies).toHaveProperty("tailwindcss");
     expect(allDependencies).toHaveProperty("@tailwindcss/vite");
+    expect(allDependencies).toHaveProperty("electron-builder");
     expect(allDependencies).toHaveProperty("lucide-react");
     expect(allDependencies).toHaveProperty("class-variance-authority");
     expect(allDependencies).toHaveProperty("tailwind-merge");
@@ -39,10 +40,45 @@ describe("build configuration", () => {
     expect(allDependencies).toHaveProperty("@radix-ui/react-tooltip");
 
     expect(allDependencies).not.toHaveProperty("@electron-forge/plugin-webpack");
+    expect(allDependencies).not.toHaveProperty("@electron-forge/maker-squirrel");
+    expect(allDependencies).not.toHaveProperty("electron-squirrel-startup");
     expect(allDependencies).not.toHaveProperty("webpack");
     expect(allDependencies).not.toHaveProperty("ts-loader");
     expect(allDependencies).not.toHaveProperty("css-loader");
     expect(allDependencies).not.toHaveProperty("style-loader");
+  });
+
+  it("uses uploader product metadata and builds AppX package artifacts", async () => {
+    const [packageJsonText, builderConfig, forgeConfig, appMetadata] = await Promise.all([
+      readFile("package.json", "utf8"),
+      readFile("electron-builder.config.cjs", "utf8"),
+      readFile("forge.config.ts", "utf8"),
+      readFile("config/app-metadata.ts", "utf8"),
+    ]);
+    const packageJson = JSON.parse(packageJsonText);
+
+    expect(packageJson.name).toBe("satisfactory-save-map-uploader");
+    expect(packageJson.productName).toBe("Satisfactory Save Map Uploader");
+    expect(packageJson.scripts.make).toContain("electron-builder");
+    expect(packageJson.scripts.make).toContain("--win appx");
+    expect(packageJson.scripts["verify:make"]).toContain("verify-package.mjs make");
+    expect(builderConfig).toContain('appId: "io.github.qinmian5.satisfactory-save-map-uploader"');
+    expect(builderConfig).toContain('target: ["appx"]');
+    expect(builderConfig).toContain('identityName: "MianQin.SatisfactorySaveMapUploader"');
+    expect(builderConfig).toContain('displayName: "Satisfactory Save Map Uploader"');
+    expect(builderConfig).toContain('publisher: "CN=DCC117A3-6615-4987-B0AD-FF45756501E3"');
+    expect(builderConfig).toContain('publisherDisplayName: "Mian Qin"');
+    expect(appMetadata).toContain('packageIdentityName: "MianQin.SatisfactorySaveMapUploader"');
+    expect(appMetadata).toContain('publisher: "CN=DCC117A3-6615-4987-B0AD-FF45756501E3"');
+    expect(appMetadata).toContain('publisherDisplayName: "Mian Qin"');
+    expect(appMetadata).toContain(
+      'packageFamilyName: "MianQin.SatisfactorySaveMapUploader_xrv9fnatjde9j"',
+    );
+    expect(appMetadata).toContain('partnerCenterProductId: "9PHQ2D03K6ZS"');
+    expect(builderConfig).not.toContain("nsis");
+    expect(forgeConfig).not.toContain("MakerSquirrel");
+    expect(forgeConfig).not.toContain("@electron-forge/maker-squirrel");
+    expect(packageJson.scripts.make).not.toContain("electron-forge make");
   });
 
   it("activates pnpm with Corepack before workflow pnpm commands", async () => {

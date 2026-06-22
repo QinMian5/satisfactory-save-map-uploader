@@ -1,11 +1,11 @@
 ---
-abstract: Stable product requirements for a local Satisfactory save map watcher.
+abstract: Stable product requirements for a local Satisfactory save map uploader.
 out_of_scope: Implementation details, dependency choices, exact command syntax, and third-party page selectors.
 ---
 
-# Requirements Document: Satisfactory Save Map Watcher
+# Requirements Document: Satisfactory Save Map Uploader
 
-The project provides a local desktop tool that watches Satisfactory save files and presents the latest saved game in an interactive map workflow. Detailed runtime, tooling, packaging, and verification choices are defined in the related module design documents.
+The project provides a local desktop tool that uploads selected Satisfactory save files into an interactive map workflow. Detailed runtime, tooling, packaging, and verification choices are defined in the related module design documents.
 
 ## Authoring Constraints
 
@@ -54,7 +54,7 @@ The system SHALL reuse a single active map session for repeated save submissions
 
 As the project maintainer, I want a single local command surface so that running, checking, testing, and building the tool are predictable.
 
-The project SHALL provide documented commands for development startup, application startup, build, package, installer generation, lint, typecheck, test, and aggregate checks.
+The project SHALL provide documented commands for development startup, application startup, build, package generation, installable artifact generation, lint, typecheck, test, and aggregate checks.
 
 ### R-007: Quality gates
 
@@ -68,7 +68,7 @@ The project SHALL include formatting, linting, typechecking, and commit-message 
 
 As a Windows user, I want an installable desktop application so that I can run the tool without setting up a development environment.
 
-The project SHALL produce a Windows desktop application package and a Windows installer artifact for the supported release channel.
+The project SHALL produce a Windows desktop application package and an installable Windows artifact for the supported release channel.
 
 ### R-009: Release readiness validation
 
@@ -76,7 +76,7 @@ As the project maintainer, I want pre-release validation that avoids external si
 
 The project SHALL provide automated package validation that does not upload user saves or require third-party website access.
 
-The project SHALL document manual acceptance steps for real website upload behavior and clean Windows installer behavior.
+The project SHALL document manual acceptance steps for real website upload behavior and clean Windows package behavior.
 
 ### R-010: Third-party upload disclosure
 
@@ -90,7 +90,7 @@ The system SHALL keep revoked permission effective across restarts unless the us
 
 ### R-011: Interface language preference
 
-As a user, I want to choose the interface language so that permission disclosures and watcher controls are understandable.
+As a user, I want to choose the interface language so that permission disclosures and upload controls are understandable.
 
 The system SHALL provide a persisted user-selectable interface language.
 

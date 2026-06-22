@@ -50,7 +50,7 @@ export type RendererCopy = {
 
 export const RENDERER_LANGUAGE_COPY: Record<AppLanguage, RendererCopy> = {
   en: {
-    documentTitle: "Satisfactory Save Map Watcher",
+    documentTitle: "Satisfactory Save Map Uploader",
     language: {
       label: "Language",
       tooltip: "Change interface language.",
@@ -60,7 +60,7 @@ export const RENDERER_LANGUAGE_COPY: Record<AppLanguage, RendererCopy> = {
       error: "Error",
     },
     consent: {
-      appName: "Satisfactory Save Map Watcher",
+      appName: "Satisfactory Save Map Uploader",
       title: "Allow Satisfactory save uploads?",
       warningTitle: "Uploads go to a third-party website",
       warningDescription: `This app can watch local Satisfactory .sav files only after you allow it. When the map is updated, the selected save file is provided to ${getMapUrlForLanguage("en")} inside the application.`,
@@ -71,7 +71,7 @@ export const RENDERER_LANGUAGE_COPY: Record<AppLanguage, RendererCopy> = {
       decline: "Not now, exit",
     },
     dashboard: {
-      title: "Map watcher",
+      title: "Map uploader",
       commandsLabel: "Watcher commands",
       start: "Start automatic upload",
       startTooltip: "Scan the save folder and upload new saves automatically.",
@@ -98,7 +98,7 @@ export const RENDERER_LANGUAGE_COPY: Record<AppLanguage, RendererCopy> = {
     },
   },
   "zh-CN": {
-    documentTitle: "Satisfactory Save Map Watcher",
+    documentTitle: "Satisfactory Save Map Uploader",
     language: {
       label: "语言",
       tooltip: "切换界面语言。",
@@ -108,7 +108,7 @@ export const RENDERER_LANGUAGE_COPY: Record<AppLanguage, RendererCopy> = {
       error: "错误",
     },
     consent: {
-      appName: "Satisfactory Save Map Watcher",
+      appName: "Satisfactory Save Map Uploader",
       title: "允许上传幸福工厂存档？",
       warningTitle: "存档会提供给第三方网站",
       warningDescription: `只有在你允许后，本应用才会监控本地 Satisfactory .sav 存档。地图更新时，选中的存档会在应用内提供给 ${getMapUrlForLanguage("zh-CN")}。`,
@@ -119,7 +119,7 @@ export const RENDERER_LANGUAGE_COPY: Record<AppLanguage, RendererCopy> = {
       decline: "暂不，退出",
     },
     dashboard: {
-      title: "地图监控",
+      title: "地图上传",
       commandsLabel: "监控操作",
       start: "开始自动上传",
       startTooltip: "扫描存档目录，并自动上传新的存档。",

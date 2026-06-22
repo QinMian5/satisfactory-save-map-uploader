@@ -18,7 +18,7 @@ export function createStatusWindowOptions(preloadPath: string): BrowserWindowCon
     height: 860,
     minWidth: 980,
     minHeight: 640,
-    title: "Satisfactory Save Map Watcher",
+    title: "Satisfactory Save Map Uploader",
     autoHideMenuBar: true,
     webPreferences: {
       preload: preloadPath,

@@ -19,10 +19,6 @@ export type CommandLinePort = {
   hasSwitch: (name: string) => boolean;
 };
 
-export function shouldExitForSquirrelStartup(startedBySquirrel: boolean): boolean {
-  return startedBySquirrel;
-}
-
 export function hasSmokeTestArg(argv: readonly string[]): boolean {
   return argv.includes("--smoke-test");
 }

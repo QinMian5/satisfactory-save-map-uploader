@@ -222,11 +222,11 @@ describe("map resource request audit", () => {
       getMapResourcePolicyConfig({
         env: {},
         isPackaged: false,
-        userDataPath: "C:\\Users\\tester\\AppData\\Roaming\\Satisfactory Save Map Watcher",
+        userDataPath: "C:\\Users\\tester\\AppData\\Roaming\\Satisfactory Save Map Uploader",
       }),
     ).toEqual({
       logPath:
-        "C:\\Users\\tester\\AppData\\Roaming\\Satisfactory Save Map Watcher\\dev-map-resource-requests.ndjson",
+        "C:\\Users\\tester\\AppData\\Roaming\\Satisfactory Save Map Uploader\\dev-map-resource-requests.ndjson",
       mode: "allowlist",
     });
 
@@ -234,11 +234,11 @@ describe("map resource request audit", () => {
       getMapResourcePolicyConfig({
         env: { SATISFACTORY_MAP_RESOURCE_FILTER: "audit" },
         isPackaged: false,
-        userDataPath: "C:\\Users\\tester\\AppData\\Roaming\\Satisfactory Save Map Watcher",
+        userDataPath: "C:\\Users\\tester\\AppData\\Roaming\\Satisfactory Save Map Uploader",
       }),
     ).toEqual({
       logPath:
-        "C:\\Users\\tester\\AppData\\Roaming\\Satisfactory Save Map Watcher\\dev-map-resource-requests.ndjson",
+        "C:\\Users\\tester\\AppData\\Roaming\\Satisfactory Save Map Uploader\\dev-map-resource-requests.ndjson",
       mode: "audit",
     });
 
@@ -246,7 +246,7 @@ describe("map resource request audit", () => {
       getMapResourcePolicyConfig({
         env: { SATISFACTORY_MAP_RESOURCE_FILTER: "allowlist" },
         isPackaged: true,
-        userDataPath: "C:\\Users\\tester\\AppData\\Roaming\\Satisfactory Save Map Watcher",
+        userDataPath: "C:\\Users\\tester\\AppData\\Roaming\\Satisfactory Save Map Uploader",
       }),
     ).toEqual({ mode: "allowlist" });
   });

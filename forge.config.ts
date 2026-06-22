@@ -1,8 +1,7 @@
-// abstract: Electron Forge packaging, maker, Vite, ASAR, and fuse configuration.
+// abstract: Electron Forge packaging, Vite, ASAR, and fuse configuration.
 // out_of_scope: Runtime Electron window behavior, CI release orchestration, and Store identities.
 
 import { FuseV1Options, FuseVersion } from "@electron/fuses";
-import { MakerSquirrel } from "@electron-forge/maker-squirrel";
 import { FusesPlugin } from "@electron-forge/plugin-fuses";
 import { VitePlugin } from "@electron-forge/plugin-vite";
 import type { ForgeConfig } from "@electron-forge/shared-types";
@@ -19,25 +18,17 @@ const config: ForgeConfig = {
   },
   packagerConfig: {
     asar: true,
-    executableName: APP_METADATA.squirrelName,
+    executableName: APP_METADATA.executableName,
     appBundleId: APP_METADATA.appId,
     win32metadata: {
       CompanyName: APP_METADATA.author,
       FileDescription: APP_METADATA.description,
-      OriginalFilename: `${APP_METADATA.squirrelName}.exe`,
+      OriginalFilename: `${APP_METADATA.executableName}.exe`,
       ProductName: APP_METADATA.productName,
-      InternalName: APP_METADATA.squirrelName,
+      InternalName: APP_METADATA.executableName,
     },
   },
-  makers: [
-    new MakerSquirrel({
-      name: APP_METADATA.squirrelName,
-      setupExe: APP_METADATA.setupExe,
-      authors: APP_METADATA.author,
-      description: APP_METADATA.description,
-      noMsi: true,
-    }),
-  ],
+  makers: [],
   plugins: [
     new VitePlugin({
       build: [

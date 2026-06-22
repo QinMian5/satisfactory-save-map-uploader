@@ -1,8 +1,8 @@
 {
-  "name": "satisfactory-save-map-watcher",
-  "productName": "Satisfactory Save Map Watcher",
+  "name": "satisfactory-save-map-uploader",
+  "productName": "Satisfactory Save Map Uploader",
   "version": "0.1.0",
-  "description": "Desktop watcher that uploads local Satisfactory saves to the Satisfactory Calculator interactive map.",
+  "description": "Desktop uploader that provides selected Satisfactory saves to the Satisfactory Calculator interactive map.",
   "private": true,
   "author": "QinMian5",
   "license": "MIT",
@@ -14,7 +14,7 @@
     "build": "tsc -p tsconfig.json --noEmit",
     "start": "electron-forge start",
     "package": "electron-forge package --platform=win32 --arch=x64",
-    "make": "electron-forge make --platform=win32 --arch=x64",
+    "make": "pnpm run package && electron-builder --win appx --x64 --prepackaged \"out/Satisfactory Save Map Uploader-win32-x64\" --config electron-builder.config.cjs",
     "verify:package": "node scripts/verify-package.mjs package",
     "verify:make": "node scripts/verify-package.mjs make",
     "smoke:package": "node scripts/smoke-package.mjs",
@@ -29,7 +29,6 @@
   "pnpm": {
     "onlyBuiltDependencies": [
       "electron",
-      "electron-winstaller",
       "esbuild"
     ]
   },
@@ -38,7 +37,6 @@
     "@commitlint/cli": "^21.0.2",
     "@commitlint/config-conventional": "^21.0.2",
     "@electron-forge/cli": "^7.11.2",
-    "@electron-forge/maker-squirrel": "^7.11.2",
     "@electron-forge/plugin-fuses": "^7.11.2",
     "@electron-forge/plugin-vite": "^7.11.2",
     "@electron-forge/shared-types": "^7.11.2",
@@ -50,6 +48,7 @@
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.2",
     "electron": "^42.4.1",
+    "electron-builder": "^26.15.3",
     "tailwindcss": "^4.3.1",
     "tsx": "^4.22.4",
     "typescript": "^6.0.3",
@@ -65,7 +64,6 @@
     "@radix-ui/react-tooltip": "^1.2.10",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "electron-squirrel-startup": "^1.0.1",
     "lucide-react": "^1.21.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",

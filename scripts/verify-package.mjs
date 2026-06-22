@@ -11,9 +11,8 @@ import asar from "@electron/asar";
 const execFileAsync = promisify(execFile);
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const OUT_DIR = path.join(ROOT, "out");
-const EXPECTED_PACKAGE_DIR_NAME = "Satisfactory Save Map Watcher-win32-x64";
-const EXE_NAME = "SatisfactorySaveMapWatcher.exe";
-const MAKE_DIR = path.join(ROOT, "out", "make", "squirrel.windows", "x64");
+const EXPECTED_PACKAGE_DIR_NAME = "Satisfactory Save Map Uploader-win32-x64";
+const EXE_NAME = "SatisfactorySaveMapUploader.exe";
 const REQUIRED_PACKAGE_FILES = [
   EXE_NAME,
   "resources/app.asar",
@@ -135,6 +134,14 @@ export async function findUnpackedPackageDirectory(outRoot) {
   );
 }
 
+export function getExpectedMakeArtifacts(packageJson, root = "") {
+  const makeDir = path.join(root, "out", "make", "appx");
+  return {
+    makeDir,
+    files: [path.join(makeDir, `SatisfactorySaveMapUploader-${packageJson.version}-x64.appx`)],
+  };
+}
+
 async function isUnpackedPackageDirectory(candidate) {
   return (
     (await pathExists(path.join(candidate, EXE_NAME))) &&
@@ -238,21 +245,30 @@ async function verifyPackage() {
 
 async function verifyMake() {
   const packageJson = await readPackageJson();
-  const expectedSetup = path.join(MAKE_DIR, "SatisfactorySaveMapWatcher-Setup.exe");
-  const expectedNupkg = path.join(
-    MAKE_DIR,
-    `SatisfactorySaveMapWatcher-${packageJson.version}-full.nupkg`,
-  );
-  const expectedReleases = path.join(MAKE_DIR, "RELEASES");
-  const expectedFiles = [expectedSetup, expectedNupkg, expectedReleases];
+  const expected = getExpectedMakeArtifacts(packageJson, ROOT);
 
-  await assertPathExists(MAKE_DIR, "Squirrel maker directory");
-  for (const file of expectedFiles) {
+  await assertPathExists(expected.makeDir, "AppX maker directory");
+  const existingFiles = await listFiles(expected.makeDir);
+  const forbiddenLegacyInstallerArtifacts = existingFiles.filter((file) => {
+    const name = path.basename(file).toLowerCase();
+    return (
+      name === "releases" ||
+      name.endsWith(".nupkg") ||
+      name.endsWith(".zip") ||
+      name.includes("-setup-")
+    );
+  });
+  if (forbiddenLegacyInstallerArtifacts.length > 0) {
+    throw new Error(
+      `Forbidden legacy installer artifacts found:\n${forbiddenLegacyInstallerArtifacts.join("\n")}`,
+    );
+  }
+  for (const file of expected.files) {
     await assertPathExists(file, path.basename(file));
   }
 
-  console.log("Installer verification passed.");
-  for (const file of expectedFiles) {
+  console.log("AppX package verification passed.");
+  for (const file of expected.files) {
     const stats = await fs.stat(file);
     const checksumPath = `${file}.sha256`;
     const checksum = await sha256File(file);

@@ -1,9 +1,9 @@
 ---
-abstract: Runtime, desktop packaging, automation, tooling, and verification design for the Satisfactory save map watcher.
-out_of_scope: Automatic updates, tray behavior, commercial signing, MSIX generation, Store submission, save-file parsing, third-party API reverse engineering, and multi-directory configuration.
+abstract: Runtime, desktop packaging, automation, tooling, and verification design for the Satisfactory save map uploader.
+out_of_scope: Automatic updates, tray behavior, signing integration, Store submission, save-file parsing, third-party API reverse engineering, and multi-directory configuration.
 ---
 
-# Design: save-map-watcher
+# Design: save-map-uploader
 
 ## Active Truth Policy
 
@@ -13,7 +13,7 @@ out_of_scope: Automatic updates, tray behavior, commercial signing, MSIX generat
 
 ## Context
 
-- **Purpose:** Provide a local Electron desktop application that watches Satisfactory save files and keeps an interactive map page loaded with the latest save.
+- **Purpose:** Provide a local Electron desktop application that uploads selected Satisfactory save files into an interactive map page.
 - **Scope/Boundaries:** The module owns local save discovery, change monitoring, debounce scheduling, one embedded map view, file upload automation, status-window state, command scripts, desktop packaging, and local quality checks.
 - **Related Requirements:** R-001, R-002, R-003, R-004, R-005, R-006, R-007, R-008, R-009, R-010, R-011.
 
@@ -26,14 +26,14 @@ out_of_scope: Automatic updates, tray behavior, commercial signing, MSIX generat
 ## Inputs & Outputs
 
 - **Inputs:** `.sav` files under the default Satisfactory Windows save root, including nested account or profile directories.
-- **Outputs:** A local status window with a reusable embedded Electron map view containing the Satisfactory Calculator interactive map loaded from the latest selected save, an unpacked Windows app package, and a Squirrel.Windows installer artifact.
+- **Outputs:** A local status window with a reusable embedded Electron map view containing the Satisfactory Calculator interactive map loaded from the latest selected save, an unpacked Windows app package, and an AppX/MSIX-family package artifact.
 - **Artifacts:** TypeScript source files, React renderer files, Tailwind stylesheet entry, tests, pnpm lockfile, Electron Forge configuration, Vite configuration, Biome configuration, TypeScript configuration, pre-commit hook configuration, commitlint configuration, GitHub Actions workflows, documentation, and MIT license text.
 
 ## Design Approach
 
 - **Approach:** An Electron application starts a local status window, loads local consent preferences, opens the embedded map only after the current third-party upload disclosure has been accepted, and starts save watching only after the user requests monitoring in the current session. Business services are separated from Electron window lifecycle and renderer presentation.
 - **Key Elements:**
-  - `src/main/app.ts` wires Electron lifecycle, Squirrel startup handling, single-instance lock, status window, embedded map view, state, IPC handlers, and service cleanup.
+  - `src/main/app.ts` wires Electron lifecycle, single-instance lock, status window, embedded map view, state, IPC handlers, and service cleanup.
   - `src/main/lifecycle.ts` contains pure startup, smoke-mode, lock, and second-instance focus decisions.
   - `src/main/runtime-controller.ts` coordinates preferences, revocation marker persistence, in-memory upload consent, lazy watcher/uploader creation, start/stop persistence, manual upload/open-map commands, and revocation cleanup.
   - `src/main/preload.ts` exposes a minimal `window.satisfactoryApp` API through `contextBridge`.
@@ -53,12 +53,13 @@ out_of_scope: Automatic updates, tray behavior, commercial signing, MSIX generat
   - `src/saves.ts` resolves the default save root and recursively finds the most recently modified game `.sav` file, excluding Satisfactory server manager metadata files.
   - `src/debounce.ts` provides small debounced async task runners for coalescing rapid save events, including a cancelable variant for stop and quit cleanup.
   - `src/shared/language.ts` owns the supported language registry, default language, and Satisfactory Calculator locale URL construction.
-  - `src/renderer/` contains the React, Tailwind CSS, and shadcn-style component code for the permission gate, language switcher, watcher dashboard, concise status display, and command buttons.
+  - `src/renderer/` contains the React, Tailwind CSS, and shadcn-style component code for the permission gate, language switcher, uploader dashboard, concise status display, and command buttons.
   - `src/renderer/i18n.ts` owns renderer-facing copy dictionaries keyed by supported application language.
   - `src/renderer/view-model.ts` selects the active renderer view and maps detailed watcher/upload state to primary user-facing status copy.
   - `src/shared/` contains serializable state and IPC contracts.
-  - `forge.config.ts` configures Electron Forge Vite, Squirrel maker, ASAR, and Electron fuses.
-  - `scripts/verify-package.mjs` audits the real unpacked app and Squirrel artifacts.
+  - `forge.config.ts` configures Electron Forge Vite, ASAR, and Electron fuses for the unpacked package.
+  - `electron-builder.config.cjs` configures the AppX/MSIX-family package artifact from the unpacked package.
+  - `scripts/verify-package.mjs` audits the real unpacked app and AppX package artifacts.
   - `scripts/smoke-package.mjs` launches the unpacked app executable in `--smoke-test` mode.
   - `scripts/integration-package.mjs` launches the unpacked app executable in `--integration-test-upload` mode with a loopback fixture page and synthetic `.sav`.
   - `package.json` exposes `dev`, `build`, `start`, `package`, `make`, `verify:package`, `verify:make`, `smoke:package`, `integration:package`, `lint`, `fix`, `typecheck`, `test`, `check`, and `hooks:install` scripts.
@@ -73,13 +74,13 @@ out_of_scope: Automatic updates, tray behavior, commercial signing, MSIX generat
 - Accepting the current disclosure writes accepted preferences, verifies the accept intent is still current, clears and confirms the revocation marker is absent, verifies the intent again, then updates in-memory consent and opens the map while leaving the watcher stopped.
 - Choosing Not now exits the application without persisting preferences, resolving the save root, scanning saves, starting the watcher, creating the map window, or loading the third-party map page.
 - After current permission has been accepted, the app loads the map page on launch, and the watcher starts stopped for each app session.
-- The permission gate and watcher dashboard expose a Globe language switcher. The selected language is persisted in preferences, controls renderer copy, updates document language metadata, and selects the Satisfactory Calculator locale URL from the shared language registry.
+- The permission gate and uploader dashboard expose a Globe language switcher. The selected language is persisted in preferences, controls renderer copy, updates document language metadata, and selects the Satisfactory Calculator locale URL from the shared language registry.
 - Language changes before upload permission is granted persist the language preference without resolving the save root, scanning saves, starting the watcher, creating the map window, or loading the third-party map page.
 - Language changes after upload permission is granted reload the map workflow with the selected locale. If a currently opened save is recorded, the application uploads that same save path again. If no currently opened save is recorded, the application reloads the map page without selecting a save.
 - User Stop stops automatic file watching without revoking upload permission. User Start starts scanning/uploading for the current session only.
 - Revoke immediately disables in-memory upload consent, increments the upload generation, cancels pending or active upload work, stops the watcher, writes the revocation marker before map-window/session cleanup, then normalizes accepted preferences. The consent mutation queue serializes Accept and Revoke persistence while generation checks make stale operations unable to reopen the gate.
 - If the revocation marker is saved, revocation remains effective across restarts even if preferences normalization fails. If marker writing fails, revoked preferences are used as a fallback persistent invalidation. If both persistent invalidation paths fail, the current process remains unauthorized and the status window reports that restart behavior cannot be guaranteed until revoke succeeds.
-- Revoked or uncertain permission state displays the permission gate. The watcher dashboard is available only when upload permission is granted, and the permission gate allows the user to grant permission again or exit the app.
+- Revoked or uncertain permission state displays the permission gate. The uploader dashboard is available only when upload permission is granted, and the permission gate allows the user to grant permission again or exit the app.
 - If the default save root is unavailable, the status window remains open, watcher status becomes `error`, and logs show the checked directory.
 - Watcher start continues monitoring when the save root exists but no game `.sav` files are present.
 - Save events are debounced by approximately 2 seconds.
@@ -88,7 +89,7 @@ out_of_scope: Automatic updates, tray behavior, commercial signing, MSIX generat
 - Stop immediately closes the filesystem watcher, cancels pending debounce work, drops pending automatic uploads, and does not interrupt an already active upload.
 - Manual upload remains available while stopped and uses the same serial upload queue.
 - Application quit cancels pending timers and aborts active upload work without waiting for long website processing.
-- Manual start, stop, and upload latest save actions are available from the watcher dashboard after third-party upload permission has been granted.
+- Manual start, stop, and upload latest save actions are available from the uploader dashboard after third-party upload permission has been granted.
 - The map view is created lazily after permission is granted, embedded to the right of the watcher toolbar, automatically aligned to the remote map layout anchor after real map page loads, and reused for uploads. Application shutdown destroys it.
 - In packaged production runs, the map session allows resource requests only from `satisfactory-calculator.com`, `static.satisfactory-calculator.com`, and the site dependency CDN `cdn.jsdelivr.net`. Development runs use the same allow-list by default and write sanitized request metadata plus each allow/block decision to `dev-map-resource-requests.ndjson` under Electron `userData`; the log omits query strings, hash fragments, save paths, and file contents. Development can switch to audit-only logging with `SATISFACTORY_MAP_RESOURCE_FILTER=audit`.
 - Upload failures update app state and logs without exiting the watcher or application.
@@ -123,8 +124,8 @@ out_of_scope: Automatic updates, tray behavior, commercial signing, MSIX generat
 - `pnpm run verify:package` audits the unpacked package, `app.asar`, fuses, Authenticode status, source maps, forbidden artifacts, Electron version, and largest files.
 - `pnpm run smoke:package` launches the real unpacked Windows executable with `--smoke-test`.
 - `pnpm run integration:package` launches the real unpacked Windows executable with `--integration-test-upload`, a local synthetic `.sav`, and a loopback fixture page that reads and verifies the uploaded file contents without contacting the real map website.
-- `pnpm run make` creates Windows x64 Squirrel.Windows artifacts.
-- `pnpm run verify:make` validates Squirrel artifact names, versioned `.nupkg`, `RELEASES`, sizes, and SHA-256 checksum files.
+- `pnpm run make` creates a Windows x64 AppX/MSIX-family package under `out/make/appx`.
+- `pnpm run verify:make` validates AppX package names, sizes, and SHA-256 checksum files.
 - `pnpm run lint` runs `biome ci .`.
 - `pnpm run fix` runs `biome check --write .`.
 - `pnpm run typecheck` runs `tsc -p tsconfig.json --noEmit`.
@@ -134,14 +135,14 @@ out_of_scope: Automatic updates, tray behavior, commercial signing, MSIX generat
 
 ## Distribution
 
-- GitHub test builds are unsigned Squirrel.Windows artifacts.
+- GitHub test builds are unsigned AppX/MSIX-family package artifacts.
 - Tag builds create draft releases with unsigned artifacts and checksums.
-- GitHub Actions use read-only default permissions. The tag-only draft release job uses write permission only after build, check, package verification, make, installer verification, and artifact upload complete.
+- GitHub Actions use read-only default permissions. The tag-only draft release job uses write permission only after build, check, package verification, make, AppX verification, and artifact upload complete.
 - GitHub Actions use official actions pinned to full commit SHA references.
-- Microsoft Store distribution is documented as a validation path using Electron Forge package output and Microsoft WinApp CLI.
-- Store identity fields are held outside runtime code and remain placeholders until Partner Center provides final values.
+- Microsoft Store distribution is documented as a validation path using Electron Forge package output and AppX/MSIX-family package artifacts.
+- Store identity fields are centralized in `config/app-metadata.ts` and mirrored into `electron-builder.config.cjs` for AppX package generation. The current Partner Center product identity is `MianQin.SatisfactorySaveMapUploader`, publisher `CN=DCC117A3-6615-4987-B0AD-FF45756501E3`, publisher display name `Mian Qin`, and Store ID `9PHQ2D03K6ZS`.
 
 ## Validation
 
 - **Checks:** Automated tests cover recursive latest-save selection, metadata exclusion, debounce coalescing, app state snapshots and logs, renderer permission view selection, language registry coverage, renderer copy coverage, persisted language changes, locale-specific map URL selection, language-change re-upload of the currently opened save, watcher lifecycle, missing directory handling, serialized latest-wins uploads, stop semantics, stale upload protection, lifecycle helpers, map close/destroy behavior, background throttling, CDP command order, upload error classification, file validation, DOM readiness phases, IPC channels and sender validation, preload subscription behavior, URL allow-list boundaries, permission denial, revocation marker persistence, Accept/Revoke mutation ordering, integration-test config validation, and package verification helpers.
-- **Evidence:** Local quality checks run Biome, TypeScript, and Vitest. Packaging verification runs Electron Forge package output audits, local packaged smoke tests, local packaged Electron/CDP integration tests, Electron Forge make output audits, checksum generation, and fuse reads against the real packaged executable. Manual validation covers real website upload behavior, default save discovery, latest save upload, map window behavior, game-save-triggered upload, application exit, clean installer operation, uninstall behavior, and package inspection for absent Playwright browser artifacts.
+- **Evidence:** Local quality checks run Biome, TypeScript, and Vitest. Packaging verification runs Electron Forge package output audits, local packaged smoke tests, local packaged Electron/CDP integration tests, AppX package output audits, checksum generation, and fuse reads against the real packaged executable. Manual validation covers real website upload behavior, default save discovery, latest save upload, map view behavior, game-save-triggered upload, application exit, clean package installation, uninstall behavior, and package inspection for absent Playwright browser artifacts.

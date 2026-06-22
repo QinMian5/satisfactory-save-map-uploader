@@ -1,4 +1,4 @@
-// abstract: Compact watcher dashboard toolbar.
+// abstract: Compact uploader dashboard toolbar.
 // out_of_scope: Electron IPC, save scanning, and upload implementation.
 
 import { Pause, Play, ShieldOff, Upload } from "lucide-react";

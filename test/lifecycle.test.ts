@@ -1,5 +1,5 @@
 // abstract: Tests for Electron app lifecycle decisions that can run without a real Electron app.
-// out_of_scope: Real Squirrel events, real BrowserWindow instances, and renderer behavior.
+// out_of_scope: Real BrowserWindow instances, renderer behavior, and package installation.
 
 import { describe, expect, it, vi } from "vitest";
 import {
@@ -9,15 +9,9 @@ import {
   hasIntegrationTestSwitch,
   hasSmokeTestArg,
   hasSmokeTestSwitch,
-  shouldExitForSquirrelStartup,
 } from "../src/main/lifecycle.js";
 
 describe("lifecycle helpers", () => {
-  it("short-circuits normal initialization for Squirrel startup events", () => {
-    expect(shouldExitForSquirrelStartup(true)).toBe(true);
-    expect(shouldExitForSquirrelStartup(false)).toBe(false);
-  });
-
   it("detects smoke-test mode from argv without treating other args as smoke tests", () => {
     expect(hasSmokeTestArg(["app.exe", "--smoke-test"])).toBe(true);
     expect(hasSmokeTestArg(["app.exe", "--smoke-test-extra"])).toBe(false);
