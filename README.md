@@ -1,88 +1,74 @@
----
-abstract: User and developer setup notes for the Electron Satisfactory save map uploader.
-out_of_scope: Product requirements, implementation planning, third-party website internals, and Store submission.
----
-
 # Satisfactory Save Map Uploader
 
-Satisfactory Save Map Uploader is an unofficial community desktop app for Windows. After you grant permission, it watches the default local Satisfactory save directory and uploads the latest `.sav` file to the Satisfactory Calculator interactive map embedded on the right side of the main app window.
+[English](README.md) | [简体中文](docs/readme/README.zh-CN.md)
 
-This project is not affiliated with, endorsed by, or sponsored by Coffee Stain Studios, Coffee Stain Publishing, or Satisfactory Calculator. It depends on the third-party website `https://satisfactory-calculator.com/zh/interactive-map`; website changes or outages can break upload automation.
+[![CI](https://github.com/QinMian5/satisfactory/actions/workflows/ci.yml/badge.svg)](https://github.com/QinMian5/satisfactory/actions/workflows/ci.yml)
+[![Release](https://github.com/QinMian5/satisfactory/actions/workflows/release.yml/badge.svg)](https://github.com/QinMian5/satisfactory/actions/workflows/release.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+![Windows](https://img.shields.io/badge/platform-Windows-0078D4.svg)
 
-## For Users
+Satisfactory Save Map Uploader is an unofficial Windows desktop app that uploads your selected Satisfactory `.sav` file to the Satisfactory Calculator interactive map and keeps the map open in the same window.
 
-Install the Windows build from the generated installer, or extract the portable zip and run the app without installing. The V1 app opens a first-run permission gate before showing the uploader dashboard. After permission is granted, the dashboard shows the current save and the main watch/upload controls.
+It is not affiliated with, endorsed by, or sponsored by Coffee Stain Studios, Coffee Stain Publishing, or Satisfactory Calculator.
 
-On first launch, the app does not scan saves, open the map page, or upload anything until you choose **Allow uploads**. That choice allows the app to provide selected `.sav` files to the third-party Satisfactory Calculator map page for processing, but the watcher stays stopped until you click **Start automatic upload**. Choosing **Not now, exit** closes the app without saving permission or starting the watcher.
+## Download
 
-Available actions:
+Download the Windows build from [GitHub Releases](https://github.com/QinMian5/satisfactory/releases):
 
-- Start automatic upload
-- Pause watching
-- Upload latest save
-- Disable uploads
+- `SatisfactorySaveMapUploader-Installer-<version>-x64.exe` installs the app with a guided Windows installer.
+- `SatisfactorySaveMapUploader-Portable-<version>-x64.zip` runs after extracting the folder, without installing.
 
-Pause watching is temporary and preserves permission. Disable uploads stops future automatic uploads, records a local revoked state that takes priority on restart, and returns to the permission gate until uploads are allowed again. This cannot take back a save file that was already provided to the third-party page.
+Unsigned beta builds can trigger Windows SmartScreen warnings.
 
-Unsigned GitHub beta installers and portable zips can trigger Windows SmartScreen warnings.
+## Features
 
-## For Developers
+- Starts with a first-run permission screen before it scans saves, starts watching, opens the map, or uploads a file.
+- Uses the default Windows Satisfactory save directory.
+- Uploads the newest save on demand.
+- Can automatically upload new saves after you click **Start automatic upload**.
+- Reuses one embedded Satisfactory Calculator map view.
+- Supports English and Simplified Chinese app text, and opens the matching map language.
+- Can open the current save folder from the app.
+
+## Privacy
+
+The app only runs locally, but uploads work by giving the selected `.sav` file to the third-party Satisfactory Calculator web page. That page can read the file contents and normal browser upload information.
+
+The app developer does not receive or store save files and does not include analytics or telemetry. Only upload saves you are comfortable providing to that third-party page.
+
+## Quick Start
+
+1. Launch the app.
+2. Choose your language if needed.
+3. Click **Allow uploads** to grant permission.
+4. Click **Upload latest save** for a one-time upload, or **Start automatic upload** to watch for new saves.
+5. Use **Pause automatic upload** to stop automatic uploads without revoking permission.
+6. Use **Disable uploads** to revoke permission and exit. The next launch returns to the permission screen.
+
+## Troubleshooting
+
+- If no save is found, open Satisfactory and create a save in the default local save directory.
+- If the map does not update, try **Upload latest save** again after the Satisfactory Calculator page has loaded.
+- If the website is offline or changes its upload UI, uploads can fail until the app is updated.
+- If Windows blocks the app, verify the release artifact and checksum before choosing whether to run it.
+
+## Development
+
+Prerequisites: Node.js, pnpm through Corepack, and uv for installing git hooks.
 
 ```powershell
 pnpm install
 pnpm run dev
-```
-
-In packaged production runs, the map window allows resources only from
-`satisfactory-calculator.com`, `static.satisfactory-calculator.com`, and the
-site dependency CDN `cdn.jsdelivr.net`. Other third-party resource hosts are blocked.
-
-In development startup, map-window resource requests are recorded to
-`dev-map-resource-requests.ndjson` under Electron `userData`. The default
-development mode uses the same allow-list blocking policy and logs sanitized
-request metadata plus each allow/block decision. To collect audit-only request
-data without blocking, set `SATISFACTORY_MAP_RESOURCE_FILTER=audit` before
-starting the app. For visual validation, `SATISFACTORY_MAP_SHOW_ON_CREATE=1`
-shows and focuses the map view when it is first created.
-
-## Commands
-
-```powershell
 pnpm run check
-pnpm run build
 pnpm run package
-pnpm run verify:package
-pnpm run smoke:package
-pnpm run integration:package
-pnpm run make
 pnpm run make:installer
 pnpm run make:portable
-pnpm run verify:make
-pnpm run verify:installer
-pnpm run verify:portable
 ```
 
-- `pnpm run dev` and `pnpm run start` launch the Electron development app.
-- `pnpm run build` typechecks without opening a GUI.
-- `pnpm run package` creates an unpacked Windows x64 Electron package under `out/SatisfactorySaveMapUploader-Portable-<version>-x64/`.
-- `pnpm run verify:package` audits the unpacked package, ASAR, fuses, source maps, Authenticode status, and forbidden artifacts.
-- `pnpm run smoke:package` starts the real unpacked executable with `--smoke-test` and does not read saves or load third-party URLs.
-- `pnpm run integration:package` starts the real unpacked executable with `--integration-test-upload`, uses a local synthetic `.sav`, serves a loopback fixture page, verifies real Electron/CDP file selection, does not read real game saves, and does not access the real Satisfactory Calculator website.
-- `pnpm run make` creates both Windows x64 release artifacts under `out/make/`.
-- `pnpm run make:installer` creates only the guided installer.
-- `pnpm run make:portable` creates only the portable zip.
-- `pnpm run verify:make` checks both release artifacts and writes SHA-256 checksum files.
-- `pnpm run verify:installer` checks only the guided installer.
-- `pnpm run verify:portable` checks only the portable zip.
-- `pnpm run make:appx` creates the Store-oriented AppX package when the Microsoft Store path is being validated.
-- `pnpm run verify:appx` checks the AppX artifact and writes its SHA-256 checksum file.
+`pnpm run dev` starts the Electron development app. `pnpm run check` runs Biome, TypeScript, and Vitest. `pnpm run package` creates the unpacked Windows app. `pnpm run make:installer` and `pnpm run make:portable` create release artifacts under `out/make`.
 
-Install git hooks when `pre-commit` is available on `PATH`:
+More project details live in [the design spec](docs/specs/designs/save-map-uploader.md), [the release policy](docs/release-policy.md), [the privacy notice](PRIVACY.md), and [the security policy](SECURITY.md).
 
-```powershell
-pnpm run hooks:install
-```
+## License
 
-## Manual Validation
-
-Build/package success is not product acceptance. Real website upload behavior and clean Windows package behavior require the checklist in [docs/manual-acceptance.md](docs/manual-acceptance.md).
+MIT. See [LICENSE](LICENSE).

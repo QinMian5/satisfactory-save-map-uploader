@@ -57,13 +57,16 @@ describe("renderer disclosure UI", () => {
 
     expect(renderer).toContain("Currently opened save");
     expect(renderer).toContain("Start automatic upload");
-    expect(renderer).toContain("Pause watching");
+    expect(renderer).toContain("Pause automatic upload");
+    expect(renderer).toContain("暂停自动上传");
     expect(renderer).toContain("Upload latest save");
     expect(renderer).toContain("Scan the save folder and upload new saves automatically");
-    expect(renderer).toContain("Pause automatic monitoring; manual uploads remain available");
+    expect(renderer).toContain("Pause automatic upload; manual uploads remain available");
     expect(renderer).toContain("Upload the newest detected save to update the map once");
     expect(renderer).toContain("Stop future uploads and exit the app; files already provided");
     expect(renderer).toContain("@radix-ui/react-tooltip");
+    expect(renderer).not.toContain("Pause watching");
+    expect(renderer).not.toContain("暂停监控");
     expect(renderer).not.toContain("StatusCard");
     expect(renderer).not.toContain("PanelDisclosure");
     expect(renderer).not.toContain("Waiting for new saves");
