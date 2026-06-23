@@ -48,6 +48,13 @@ describe("build configuration", () => {
     expect(allDependencies).not.toHaveProperty("style-loader");
   });
 
+  it("uses the latest Vite 7 toolchain compatible with Electron Forge", async () => {
+    const packageJson = JSON.parse(await readFile("package.json", "utf8"));
+
+    expect(packageJson.devDependencies.vite).toBe("^7.3.5");
+    expect(packageJson.devDependencies["@vitejs/plugin-react"]).toBe("^5.2.0");
+  });
+
   it("uses uploader product metadata and builds GitHub release artifacts", async () => {
     const [packageJsonText, builderConfig, forgeConfig, appMetadata] = await Promise.all([
       readFile("package.json", "utf8"),
