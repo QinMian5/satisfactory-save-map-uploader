@@ -4,6 +4,7 @@
 import { describe, expect, it, vi } from "vitest";
 import {
   acquireSingleInstanceLock,
+  configureBackgroundRenderingSwitches,
   focusExistingStatusWindow,
   hasIntegrationTestArg,
   hasIntegrationTestSwitch,
@@ -32,6 +33,22 @@ describe("lifecycle helpers", () => {
       hasIntegrationTestSwitch({ hasSwitch: (name) => name === "integration-test-upload" }),
     ).toBe(true);
     expect(hasIntegrationTestSwitch({ hasSwitch: () => false })).toBe(false);
+  });
+
+  it("disables Chromium occluded-window backgrounding on Windows", () => {
+    const appendSwitch = vi.fn();
+
+    configureBackgroundRenderingSwitches({ appendSwitch }, "win32");
+
+    expect(appendSwitch).toHaveBeenCalledWith("disable-backgrounding-occluded-windows");
+  });
+
+  it("does not append Windows-only rendering switches on other platforms", () => {
+    const appendSwitch = vi.fn();
+
+    configureBackgroundRenderingSwitches({ appendSwitch }, "linux");
+
+    expect(appendSwitch).not.toHaveBeenCalled();
   });
 
   it("quits immediately when the single-instance lock is unavailable", () => {

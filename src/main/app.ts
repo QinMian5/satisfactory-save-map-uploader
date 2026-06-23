@@ -22,6 +22,7 @@ import {
 import { registerIpcHandlers } from "./ipc/register-handlers.js";
 import {
   acquireSingleInstanceLock,
+  configureBackgroundRenderingSwitches,
   focusExistingStatusWindow,
   hasIntegrationTestArg,
   hasIntegrationTestSwitch,
@@ -42,6 +43,7 @@ const smokeUserDataPath = configureSmokeUserDataPath();
 const integrationUserDataPath = configureIntegrationUserDataPath();
 smokeBootLog(`module-loaded argv=${JSON.stringify(process.argv)}`);
 
+configureBackgroundRenderingSwitches(app.commandLine);
 app.enableSandbox();
 bootstrapElectronApp();
 

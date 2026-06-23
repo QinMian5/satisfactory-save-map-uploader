@@ -309,14 +309,7 @@ export class MapWindowManager implements MapWindowPort {
     const window = this.getOrCreateWindow();
     window.webContents.setBackgroundThrottling(false);
     this.onBackgroundThrottlingChange?.(false);
-    try {
-      return await operation();
-    } finally {
-      if (!window.isDestroyed()) {
-        window.webContents.setBackgroundThrottling(true);
-        this.onBackgroundThrottlingChange?.(true);
-      }
-    }
+    return operation();
   }
 
   private async alignViewportToMapContent(url: string, signal?: AbortSignal): Promise<void> {

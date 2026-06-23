@@ -278,8 +278,8 @@ export async function runIntegrationUploadTest(options: {
         if (!telemetry.debuggerAttachSucceeded || !telemetry.debuggerDetachSucceeded) {
           throw new Error("Debugger attach/detach did not complete.");
         }
-        if (JSON.stringify(telemetry.backgroundThrottling) !== JSON.stringify([false, true])) {
-          throw new Error("Background throttling was not restored after upload.");
+        if (JSON.stringify(telemetry.backgroundThrottling) !== JSON.stringify([false])) {
+          throw new Error("Background throttling was not kept disabled after upload.");
         }
         if (mapWindow.getDebugger().isAttached()) {
           throw new Error("Debugger remained attached after upload.");

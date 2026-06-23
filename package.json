@@ -1,7 +1,7 @@
 {
   "name": "satisfactory-save-map-uploader",
   "productName": "Satisfactory Save Map Uploader",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Desktop uploader that provides selected Satisfactory saves to the Satisfactory Calculator interactive map.",
   "private": true,
   "author": "Mian Qin",

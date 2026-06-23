@@ -9,6 +9,7 @@ const mapWebPreferences = (partition: string) => ({
   sandbox: true,
   webSecurity: true,
   webviewTag: false,
+  backgroundThrottling: false,
   partition,
 });
 

@@ -19,6 +19,10 @@ export type CommandLinePort = {
   hasSwitch: (name: string) => boolean;
 };
 
+export type ChromiumCommandLinePort = {
+  appendSwitch: (name: string, value?: string) => void;
+};
+
 export function hasSmokeTestArg(argv: readonly string[]): boolean {
   return argv.includes("--smoke-test");
 }
@@ -33,6 +37,16 @@ export function hasIntegrationTestArg(argv: readonly string[]): boolean {
 
 export function hasIntegrationTestSwitch(commandLine: CommandLinePort): boolean {
   return commandLine.hasSwitch("integration-test-upload");
+}
+
+export function configureBackgroundRenderingSwitches(
+  commandLine: ChromiumCommandLinePort,
+  platform: NodeJS.Platform = process.platform,
+): void {
+  if (platform !== "win32") {
+    return;
+  }
+  commandLine.appendSwitch("disable-backgrounding-occluded-windows");
 }
 
 export function acquireSingleInstanceLock(app: SingleInstanceAppPort): boolean {

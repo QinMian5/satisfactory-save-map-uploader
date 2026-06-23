@@ -245,7 +245,7 @@ describe("MapWindowManager", () => {
     expect(createWindow).toHaveBeenCalledTimes(2);
   });
 
-  it("temporarily disables background throttling only during upload processing", async () => {
+  it("keeps background throttling disabled after upload processing", async () => {
     const fakeWindow = createFakeWindow();
     const manager = new MapWindowManager({
       createWindow: () => fakeWindow,
@@ -259,7 +259,7 @@ describe("MapWindowManager", () => {
       expect(fakeWindow.throttling).toEqual([false]);
     });
 
-    expect(fakeWindow.throttling).toEqual([false, true]);
+    expect(fakeWindow.throttling).toEqual([false]);
   });
 
   it("reads and restores the remote page scroll position", async () => {
@@ -417,7 +417,7 @@ describe("MapWindowManager", () => {
     expect(fakeWindow.webContents.executeJavaScript).not.toHaveBeenCalled();
   });
 
-  it("restores background throttling after upload processing failure", async () => {
+  it("keeps background throttling disabled after upload processing failure", async () => {
     const fakeWindow = createFakeWindow();
     const manager = new MapWindowManager({
       createWindow: () => fakeWindow,
@@ -433,7 +433,7 @@ describe("MapWindowManager", () => {
       }),
     ).rejects.toThrow("upload failed");
 
-    expect(fakeWindow.throttling).toEqual([false, true]);
+    expect(fakeWindow.throttling).toEqual([false]);
   });
 
   it("registers resource request auditing only when an audit log path is provided", () => {
