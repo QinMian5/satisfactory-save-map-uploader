@@ -51,7 +51,7 @@ describe("SaveWatcherService", () => {
     expect(upload).not.toHaveBeenCalled();
     expect(state.getSnapshot()).toMatchObject({
       uploadStatus: "needs-consent",
-      lastError: "Third-party upload permission is required.",
+      lastError: { key: "thirdPartyUpload.permissionRequiredBeforeScanning" },
     });
   });
 
@@ -104,7 +104,10 @@ describe("SaveWatcherService", () => {
 
     expect(state.getSnapshot()).toMatchObject({
       uploadStatus: "error",
-      lastError: "map unavailable",
+      lastError: {
+        key: "upload.failedWithDetails",
+        params: { details: "map unavailable" },
+      },
     });
   });
 
@@ -124,7 +127,10 @@ describe("SaveWatcherService", () => {
 
     expect(state.getSnapshot()).toMatchObject({
       watcherStatus: "error",
-      lastError: "Save directory not found: C:\\Missing",
+      lastError: {
+        key: "saveDirectory.notFound",
+        params: { path: "C:\\Missing" },
+      },
     });
   });
 

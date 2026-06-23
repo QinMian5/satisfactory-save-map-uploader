@@ -1,8 +1,9 @@
 // abstract: Renderer-only view selection and user-facing status copy.
 // out_of_scope: DOM mutation, Electron IPC, and main-process state mutation.
 
+import type { LocalizedMessage } from "../shared/i18n-messages.js";
 import type { AppStateSnapshot } from "../shared/state.js";
-import { getRendererCopy } from "./i18n.js";
+import { formatLocalizedMessage, getRendererCopy } from "./i18n.js";
 
 export type RendererViewMode = "consent" | "dashboard";
 
@@ -57,14 +58,16 @@ export function getDashboardSummary(state: AppStateSnapshot): DashboardSummary {
 
 export function getDashboardViewModel(
   state: AppStateSnapshot,
-  commandError: string | null,
+  commandError: LocalizedMessage | null,
 ): DashboardViewModel {
   const summary = getDashboardSummary(state);
   const copy = getRendererCopy(state.language);
   return {
     latestSaveTitle: summary.latestSaveTitle,
     issueTitle: commandError ? copy.dashboard.commandFailed : summary.issueTitle,
-    issueDetail: commandError ?? summary.issueDetail,
+    issueDetail: commandError
+      ? formatLocalizedMessage(state.language, commandError)
+      : summary.issueDetail,
     showIssue: summary.showIssue || Boolean(commandError),
     showStartButton: summary.showStartButton,
     showStopButton: summary.showStopButton,
@@ -94,14 +97,16 @@ function getDashboardIssue(state: AppStateSnapshot): { title: string; detail: st
   ) {
     return {
       title: copy.dashboard.settingsNotSaved,
-      detail: state.consentPersistenceMessage ?? copy.dashboard.settingsNotSavedDetail,
+      detail: state.consentPersistenceMessage
+        ? formatLocalizedMessage(state.language, state.consentPersistenceMessage)
+        : copy.dashboard.settingsNotSavedDetail,
     };
   }
 
   if (state.lastError) {
     return {
       title: copy.dashboard.actionNeeded,
-      detail: state.lastError,
+      detail: formatLocalizedMessage(state.language, state.lastError),
     };
   }
 
@@ -121,7 +126,9 @@ function getPermissionPersistenceIssue(
 
   return {
     title: copy.dashboard.settingsNotSaved,
-    detail: state.consentPersistenceMessage ?? copy.dashboard.settingsNotSavedDetail,
+    detail: state.consentPersistenceMessage
+      ? formatLocalizedMessage(state.language, state.consentPersistenceMessage)
+      : copy.dashboard.settingsNotSavedDetail,
   };
 }
 

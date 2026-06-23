@@ -4,7 +4,7 @@
 import { useEffect } from "react";
 import { DEFAULT_APP_LANGUAGE } from "../shared/language.js";
 import { useSatisfactoryApp } from "./hooks/use-satisfactory-app.js";
-import { getRendererCopy } from "./i18n.js";
+import { formatLocalizedMessage, getRendererCopy } from "./i18n.js";
 import { getConsentViewModel, getDashboardViewModel, getRendererViewMode } from "./view-model.js";
 import { ConsentView } from "./views/consent-view.js";
 import { DashboardView } from "./views/dashboard-view.js";
@@ -21,7 +21,12 @@ export function App() {
   }, [copy.documentTitle, language]);
 
   if (!state) {
-    return <LoadingView copy={copy.loading} error={commandError} />;
+    return (
+      <LoadingView
+        copy={copy.loading}
+        error={commandError ? formatLocalizedMessage(language, commandError) : null}
+      />
+    );
   }
 
   const viewMode = getRendererViewMode(state);

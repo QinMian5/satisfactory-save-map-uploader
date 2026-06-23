@@ -1,6 +1,7 @@
 // abstract: Serializable state contracts shared by Electron main, preload, and renderer code.
 // out_of_scope: State mutation, IPC transport, and filesystem watching.
 
+import type { LocalizedMessage } from "./i18n-messages.js";
 import type { AppLanguage } from "./language.js";
 
 export type { AppLanguage } from "./language.js";
@@ -51,16 +52,16 @@ export type AppStateSnapshot = {
   lastUploadStartedAt: string | null;
   lastUploadFinishedAt: string | null;
   lastUploadResult: UploadResult | null;
-  lastError: string | null;
+  lastError: LocalizedMessage | null;
   consentRequired: boolean;
   permissionStatus: ThirdPartyUploadPermissionStatus;
   acceptedDisclosureVersion: number | null;
   currentDisclosureVersion: number;
   autoStartWatcher: boolean;
   consentPersistenceStatus: ConsentPersistenceStatus;
-  consentPersistenceMessage: string | null;
+  consentPersistenceMessage: LocalizedMessage | null;
   language: AppLanguage;
-  privacyNotice: string | null;
+  privacyNotice: LocalizedMessage | null;
   logs: AppLogEntry[];
 };
 

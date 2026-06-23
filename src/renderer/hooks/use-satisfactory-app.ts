@@ -2,6 +2,7 @@
 // out_of_scope: Presentational layout, save watching internals, and Electron IPC handlers.
 
 import { useCallback, useEffect, useState } from "react";
+import { type LocalizedMessage, localizedMessage } from "../../shared/i18n-messages.js";
 import type { AppLanguage, AppStateSnapshot } from "../../shared/state.js";
 
 export type SatisfactoryAppCommands = {
@@ -18,13 +19,13 @@ export type SatisfactoryAppCommands = {
 
 export type SatisfactoryAppModel = {
   state: AppStateSnapshot | null;
-  commandError: string | null;
+  commandError: LocalizedMessage | null;
   commands: SatisfactoryAppCommands;
 };
 
 export function useSatisfactoryApp(): SatisfactoryAppModel {
   const [state, setState] = useState<AppStateSnapshot | null>(null);
-  const [commandError, setCommandError] = useState<string | null>(null);
+  const [commandError, setCommandError] = useState<LocalizedMessage | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -43,7 +44,9 @@ export function useSatisfactoryApp(): SatisfactoryAppModel {
       })
       .catch((error: unknown) => {
         if (mounted) {
-          setCommandError(getErrorMessage(error));
+          setCommandError(
+            localizedMessage("command.failedWithDetails", { details: getErrorMessage(error) }),
+          );
         }
       });
 
@@ -58,7 +61,9 @@ export function useSatisfactoryApp(): SatisfactoryAppModel {
     try {
       setState(await command());
     } catch (error) {
-      setCommandError(getErrorMessage(error));
+      setCommandError(
+        localizedMessage("command.failedWithDetails", { details: getErrorMessage(error) }),
+      );
     }
   }, []);
 
@@ -75,7 +80,9 @@ export function useSatisfactoryApp(): SatisfactoryAppModel {
       }
       setState(await window.satisfactoryApp.declineThirdPartyUpload());
     } catch (error) {
-      setCommandError(getErrorMessage(error));
+      setCommandError(
+        localizedMessage("command.failedWithDetails", { details: getErrorMessage(error) }),
+      );
     }
   }, []);
 

@@ -292,7 +292,10 @@ describe("AppRuntimeController", () => {
     expect(state.getSnapshot()).toMatchObject({
       language: "en",
       consentPersistenceStatus: "error",
-      consentPersistenceMessage: expect.stringContaining("settings locked"),
+      consentPersistenceMessage: {
+        key: "preferences.couldNotBeSaved",
+        params: { details: "settings locked" },
+      },
     });
   });
 
@@ -364,7 +367,10 @@ describe("AppRuntimeController", () => {
     expect(watcher.start).not.toHaveBeenCalled();
     expect(state.getSnapshot()).toMatchObject({
       consentRequired: true,
-      lastError: expect.stringContaining("disk full"),
+      lastError: {
+        key: "thirdPartyUpload.permissionCouldNotBeSaved",
+        params: { details: "disk full" },
+      },
     });
   });
 
@@ -383,7 +389,10 @@ describe("AppRuntimeController", () => {
     expect(state.getSnapshot()).toMatchObject({
       consentRequired: true,
       consentPersistenceStatus: "error",
-      privacyNotice: expect.stringContaining("marker"),
+      privacyNotice: {
+        key: "thirdPartyUpload.permissionCouldNotBeSaved",
+        params: { details: "marker locked" },
+      },
     });
   });
 
@@ -519,7 +528,7 @@ describe("AppRuntimeController", () => {
       consentRequired: true,
       autoStartWatcher: false,
       consentPersistenceStatus: "saved",
-      privacyNotice: expect.stringContaining("already have been provided"),
+      privacyNotice: { key: "revocation.fileProvidedFutureBlocked" },
     });
   });
 
@@ -534,8 +543,11 @@ describe("AppRuntimeController", () => {
     expect(state.getSnapshot()).toMatchObject({
       consentRequired: true,
       consentPersistenceStatus: "saved",
-      lastError: expect.stringContaining("preferences locked"),
-      privacyNotice: expect.stringContaining("will remain revoked after restart"),
+      lastError: {
+        key: "preferences.couldNotBeSaved",
+        params: { details: "preferences locked" },
+      },
+      privacyNotice: { key: "revocation.cancelledBeforeFileProvided" },
     });
   });
 
@@ -558,7 +570,7 @@ describe("AppRuntimeController", () => {
     expect(state.getSnapshot()).toMatchObject({
       consentRequired: true,
       consentPersistenceStatus: "saved",
-      privacyNotice: expect.stringContaining("will remain revoked after restart"),
+      privacyNotice: { key: "revocation.cancelledBeforeFileProvided" },
     });
   });
 
@@ -577,7 +589,7 @@ describe("AppRuntimeController", () => {
     expect(state.getSnapshot()).toMatchObject({
       consentRequired: true,
       consentPersistenceStatus: "durable-revoke-failed",
-      privacyNotice: expect.stringContaining("cannot guarantee"),
+      privacyNotice: { key: "revocation.activeButRestartNotGuaranteed" },
     });
   });
 

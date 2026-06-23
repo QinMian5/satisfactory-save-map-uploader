@@ -8,6 +8,7 @@ import {
   getDashboardViewModel,
   getRendererViewMode,
 } from "../src/renderer/view-model.js";
+import { localizedMessage } from "../src/shared/i18n-messages.js";
 import type { AppStateSnapshot } from "../src/shared/state.js";
 
 function state(patch: Partial<AppStateSnapshot> = {}): AppStateSnapshot {
@@ -58,7 +59,7 @@ describe("renderer view model", () => {
   it("keeps durable revoke failures on the consent view with a visible issue", () => {
     const revokeFailureState = state({
       consentPersistenceStatus: "durable-revoke-failed",
-      consentPersistenceMessage: "Revocation could not be saved for restart.",
+      consentPersistenceMessage: localizedMessage("revocation.couldNotBePersisted"),
       permissionStatus: "revocation-save-failed",
     });
 
@@ -66,7 +67,7 @@ describe("renderer view model", () => {
     expect(getConsentViewModel(revokeFailureState)).toEqual({
       isSaving: false,
       issueTitle: "Settings were not saved",
-      issueDetail: "Revocation could not be saved for restart.",
+      issueDetail: "Revocation could not be persisted.",
       showIssue: true,
     });
   });
@@ -127,12 +128,14 @@ describe("renderer view model", () => {
         state({
           language: "zh-CN",
           consentPersistenceStatus: "error",
-          consentPersistenceMessage: "无法保存设置。",
+          consentPersistenceMessage: localizedMessage("preferences.couldNotBeSaved", {
+            details: "磁盘已满",
+          }),
         }),
       ),
     ).toMatchObject({
       issueTitle: "设置未保存",
-      issueDetail: "无法保存设置。",
+      issueDetail: "偏好设置无法保存：磁盘已满",
       showIssue: true,
     });
   });
@@ -143,12 +146,14 @@ describe("renderer view model", () => {
         state({
           permissionStatus: "granted",
           consentRequired: false,
-          lastError: "Map page did not finish processing the save.",
+          lastError: localizedMessage("upload.failedWithDetails", {
+            details: "Map page did not finish processing the save.",
+          }),
         }),
       ),
     ).toMatchObject({
       issueTitle: "Action needed",
-      issueDetail: "Map page did not finish processing the save.",
+      issueDetail: "Upload failed: Map page did not finish processing the save.",
       showIssue: true,
     });
 
@@ -158,12 +163,45 @@ describe("renderer view model", () => {
           permissionStatus: "granted",
           consentRequired: false,
           consentPersistenceStatus: "error",
-          consentPersistenceMessage: "Could not save preferences.",
+          consentPersistenceMessage: localizedMessage("preferences.couldNotBeSaved", {
+            details: "Could not save preferences.",
+          }),
         }),
       ),
     ).toMatchObject({
       issueTitle: "Settings were not saved",
-      issueDetail: "Could not save preferences.",
+      issueDetail: "Preferences could not be saved: Could not save preferences.",
+      showIssue: true,
+    });
+  });
+
+  it("formats runtime state messages through the selected language", () => {
+    expect(
+      getDashboardSummary(
+        state({
+          permissionStatus: "granted",
+          consentRequired: false,
+          lastError: localizedMessage("saveDirectory.notFound", { path: "C:\\Missing" }),
+        }),
+      ),
+    ).toMatchObject({
+      issueTitle: "Action needed",
+      issueDetail: "Save directory not found: C:\\Missing",
+      showIssue: true,
+    });
+
+    expect(
+      getDashboardSummary(
+        state({
+          language: "zh-CN",
+          permissionStatus: "granted",
+          consentRequired: false,
+          lastError: localizedMessage("saveDirectory.notFound", { path: "C:\\Missing" }),
+        }),
+      ),
+    ).toMatchObject({
+      issueTitle: "需要处理",
+      issueDetail: "未找到存档目录：C:\\Missing",
       showIssue: true,
     });
   });
@@ -201,11 +239,11 @@ describe("renderer view model", () => {
           permissionStatus: "granted",
           consentRequired: false,
         }),
-        "Manual upload failed.",
+        localizedMessage("command.failedWithDetails", { details: "Manual upload failed." }),
       ),
     ).toMatchObject({
       issueTitle: "Command failed",
-      issueDetail: "Manual upload failed.",
+      issueDetail: "Command failed: Manual upload failed.",
       showIssue: true,
     });
   });

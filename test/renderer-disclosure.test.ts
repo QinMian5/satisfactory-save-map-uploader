@@ -59,10 +59,10 @@ describe("renderer disclosure UI", () => {
     expect(renderer).toContain("Start automatic upload");
     expect(renderer).toContain("Pause watching");
     expect(renderer).toContain("Upload latest save");
-    expect(renderer).toContain("Scan the save folder and upload new saves automatically.");
-    expect(renderer).toContain("Stop automatic monitoring. Manual uploads remain available.");
-    expect(renderer).toContain("Upload the newest detected save to update the map once.");
-    expect(renderer).toContain("Stops future uploads and exits the app.");
+    expect(renderer).toContain("Scan the save folder and upload new saves automatically");
+    expect(renderer).toContain("Pause automatic monitoring; manual uploads remain available");
+    expect(renderer).toContain("Upload the newest detected save to update the map once");
+    expect(renderer).toContain("Stop future uploads and exit the app; files already provided");
     expect(renderer).toContain("@radix-ui/react-tooltip");
     expect(renderer).not.toContain("StatusCard");
     expect(renderer).not.toContain("PanelDisclosure");
@@ -95,7 +95,7 @@ describe("renderer disclosure UI", () => {
   it("keeps the dashboard header to a single title", async () => {
     const [dashboard, i18n] = await Promise.all([
       readFile("src/renderer/views/dashboard-view.tsx", "utf8"),
-      readFile("src/renderer/i18n.ts", "utf8"),
+      readFile("src/renderer/i18n/en.ts", "utf8"),
     ]);
 
     expect(dashboard).toContain("copy.dashboard.title");
@@ -135,7 +135,7 @@ describe("renderer disclosure UI", () => {
     const [dashboard, hook, i18n] = await Promise.all([
       readFile("src/renderer/views/dashboard-view.tsx", "utf8"),
       readFile("src/renderer/hooks/use-satisfactory-app.ts", "utf8"),
-      readFile("src/renderer/i18n.ts", "utf8"),
+      readFile("src/renderer/i18n/en.ts", "utf8"),
     ]);
 
     expect(i18n).toContain("Disable uploads and exit?");

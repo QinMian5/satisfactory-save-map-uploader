@@ -128,13 +128,16 @@ describe("renderer React shell", () => {
   it("exposes a localized dashboard command for opening the save folder", async () => {
     const dashboard = await readFile("src/renderer/views/dashboard-view.tsx", "utf8");
     const hook = await readFile("src/renderer/hooks/use-satisfactory-app.ts", "utf8");
-    const copy = await readFile("src/renderer/i18n.ts", "utf8");
+    const [enCopy, zhCopy] = await Promise.all([
+      readFile("src/renderer/i18n/en.ts", "utf8"),
+      readFile("src/renderer/i18n/zh-cn.ts", "utf8"),
+    ]);
 
     expect(dashboard).toContain("FolderOpen");
     expect(dashboard).toContain("openSaveFolder");
     expect(hook).toContain("openSaveFolder");
-    expect(copy).toContain("Open save folder");
-    expect(copy).toContain("打开存档文件夹");
+    expect(enCopy).toContain("Open save folder");
+    expect(zhCopy).toContain("打开存档文件夹");
   });
 
   it("places the open save folder command above the current save summary", async () => {
@@ -150,7 +153,7 @@ describe("renderer React shell", () => {
 
   it("uses the sidebar column spacing instead of an extra dashboard button group", async () => {
     const dashboard = await readFile("src/renderer/views/dashboard-view.tsx", "utf8");
-    const copy = await readFile("src/renderer/i18n.ts", "utf8");
+    const copy = await readFile("src/renderer/i18n/types.ts", "utf8");
 
     expect(dashboard).not.toContain("aria-label={copy.dashboard.commandsLabel}");
     expect(dashboard).not.toContain('className="flex flex-col gap-2"');

@@ -7,6 +7,7 @@ import {
   createCancelableDebouncedAsyncTask,
 } from "../debounce.js";
 import { findLatestSave } from "../saves.js";
+import { localizedMessage } from "../shared/i18n-messages.js";
 import type { AppStateStore } from "./app-state.js";
 import type { UploadAuthorizationPort, UploadConsentToken } from "./consent-controller.js";
 
@@ -97,7 +98,7 @@ export class SaveWatcherService {
       const message = `Save directory not found: ${this.saveRoot}`;
       this.state.update({
         watcherStatus: "error",
-        lastError: message,
+        lastError: localizedMessage("saveDirectory.notFound", { path: this.saveRoot }),
       });
       this.state.addLog("error", message);
       return;
@@ -157,7 +158,7 @@ export class SaveWatcherService {
       this.state.update({
         uploadStatus: "error",
         lastUploadResult: "error",
-        lastError: message,
+        lastError: localizedMessage("upload.failedWithDetails", { details: message }),
       });
       this.state.addLog("error", message);
     }
@@ -265,7 +266,7 @@ export class SaveWatcherService {
         uploadStatus: "error",
         lastUploadFinishedAt: this.now().toISOString(),
         lastUploadResult: "error",
-        lastError: message,
+        lastError: localizedMessage("upload.failedWithDetails", { details: message }),
       });
       this.state.addLog("error", message);
     }
@@ -281,9 +282,9 @@ export class SaveWatcherService {
     this.state.update({
       uploadStatus: "needs-consent",
       lastUploadResult: null,
-      lastError: message,
+      lastError: localizedMessage("thirdPartyUpload.permissionRequiredBeforeScanning"),
       consentRequired: true,
-      privacyNotice: "Third-party upload permission is required before scanning saves.",
+      privacyNotice: localizedMessage("thirdPartyUpload.permissionRequiredBeforeScanning"),
     });
     this.state.addLog("warn", message);
   }

@@ -11,6 +11,7 @@ import {
 } from "../services/consent-controller.js";
 import type { UserPreferences } from "../services/preferences.js";
 import { type SaveUploadPort, SaveWatcherService } from "../services/save-watcher.js";
+import { localizedMessage } from "../shared/i18n-messages.js";
 import { type AppLanguage, isSupportedAppLanguage } from "../shared/language.js";
 import type { AppStateSnapshot, DisclosureSnapshot } from "../shared/state.js";
 
@@ -116,7 +117,7 @@ export class AppRuntimeController {
       const preferences = this.consent.createLanguagePreferences(language);
       this.syncConsentState({
         consentPersistenceStatus: "saving",
-        consentPersistenceMessage: "Saving language preference.",
+        consentPersistenceMessage: localizedMessage("language.preferenceSaving"),
       });
       try {
         await this.preferences.save(preferences);
@@ -128,7 +129,7 @@ export class AppRuntimeController {
       this.consent.setLanguageInMemory(language);
       this.syncConsentState({
         consentPersistenceStatus: "saved",
-        consentPersistenceMessage: "Language preference saved.",
+        consentPersistenceMessage: localizedMessage("language.preferenceSaved"),
         lastError: null,
       });
       if (!this.consent.getSnapshot().consentRequired && this.uploader) {
@@ -146,8 +147,8 @@ export class AppRuntimeController {
       const preferences = this.consent.createAcceptedPreferences({ autoStartWatcher: false });
       this.syncConsentState({
         consentPersistenceStatus: "saving",
-        consentPersistenceMessage: "Saving third-party upload permission.",
-        privacyNotice: "Saving third-party upload permission.",
+        consentPersistenceMessage: localizedMessage("thirdPartyUpload.permissionSaving"),
+        privacyNotice: localizedMessage("thirdPartyUpload.permissionSaving"),
       });
       try {
         await this.preferences.save(preferences);
@@ -159,18 +160,14 @@ export class AppRuntimeController {
           return;
         }
       } catch (error) {
-        this.reportConsentPersistenceError(
-          "Third-party upload permission could not be saved.",
-          error,
-        );
+        this.reportConsentPersistenceError(error);
         return;
       }
       this.consent.acceptInMemory({ autoStartWatcher: false });
       this.syncConsentState({
         consentPersistenceStatus: "saved",
-        consentPersistenceMessage: "Third-party upload permission saved.",
-        privacyNotice:
-          "Third-party upload permission is saved. Start automatic upload when you are ready to upload saves.",
+        consentPersistenceMessage: localizedMessage("thirdPartyUpload.permissionSaved"),
+        privacyNotice: localizedMessage("thirdPartyUpload.permissionSavedStartWhenReady"),
         lastError: null,
       });
       await this.openMapInternal();
@@ -181,8 +178,7 @@ export class AppRuntimeController {
     this.syncConsentState({
       uploadStatus: "needs-consent",
       permissionStatus: "not-granted",
-      privacyNotice:
-        "Third-party upload permission was not granted. The app will exit without scanning saves.",
+      privacyNotice: localizedMessage("thirdPartyUpload.permissionNotGrantedExit"),
     });
     this.quitApp();
     return this.state.getSnapshot();
@@ -196,8 +192,8 @@ export class AppRuntimeController {
       permissionStatus: "revoked",
       autoStartWatcher: false,
       consentPersistenceStatus: "saving",
-      consentPersistenceMessage: "Revoking third-party upload permission.",
-      privacyNotice: "Revoking third-party upload permission.",
+      consentPersistenceMessage: localizedMessage("revocation.revoking"),
+      privacyNotice: localizedMessage("revocation.revoking"),
     });
     const cancellation = await this.prepareWatcherForRevocation();
 
@@ -255,20 +251,22 @@ export class AppRuntimeController {
     preferencesError: unknown;
   }): void {
     const durable = options.markerSaved || options.preferencesSaved;
-    const baseNotice = options.fileProvided
-      ? "Third-party upload permission was revoked. The current file may already have been provided to the third-party page; future uploads are blocked."
-      : "Third-party upload permission was revoked. Pending upload was cancelled before a file was provided.";
+    const baseNoticeKey = options.fileProvided
+      ? "revocation.fileProvidedFutureBlocked"
+      : "revocation.cancelledBeforeFileProvided";
 
     if (durable) {
       const warning = options.preferencesError ?? options.markerError;
       this.state.update({
         latestSavePath: null,
         lastUploadResult: "error",
-        lastError: warning ? errorMessage(warning) : null,
+        lastError: warning
+          ? localizedMessage("preferences.couldNotBeSaved", { details: errorMessage(warning) })
+          : null,
         permissionStatus: "revoked",
         consentPersistenceStatus: "saved",
-        consentPersistenceMessage: "Revocation is saved for future restarts.",
-        privacyNotice: `${baseNotice} This app will remain revoked after restart.`,
+        consentPersistenceMessage: localizedMessage("revocation.savedForFutureRestarts"),
+        privacyNotice: localizedMessage(baseNoticeKey),
       });
       if (warning) {
         this.state.addLog("warn", errorMessage(warning));
@@ -285,12 +283,11 @@ export class AppRuntimeController {
     this.state.update({
       latestSavePath: null,
       lastUploadResult: "error",
-      lastError: failure || "Revocation could not be persisted.",
+      lastError: localizedMessage("revocation.couldNotBePersisted"),
       permissionStatus: "revocation-save-failed",
       consentPersistenceStatus: "durable-revoke-failed",
-      consentPersistenceMessage:
-        "Revocation is active for this session, but could not be saved for restart.",
-      privacyNotice: `${baseNotice} Revocation is active for this session, but the app cannot guarantee it will remain revoked after restart. Retry revoke before exiting.`,
+      consentPersistenceMessage: localizedMessage("revocation.activeButRestartNotGuaranteed"),
+      privacyNotice: localizedMessage("revocation.activeButRestartNotGuaranteed"),
     });
     this.state.addLog("error", failure || "Revocation could not be persisted.");
   }
@@ -342,7 +339,7 @@ export class AppRuntimeController {
       const targetPath = this.getSaveFolderTargetPath();
       const openError = await this.openPath(targetPath);
       if (openError) {
-        throw new Error(`Could not open save folder: ${openError}`);
+        throw new Error(openError);
       }
     });
   }
@@ -401,7 +398,7 @@ export class AppRuntimeController {
       this.state.update({
         uploadStatus: "error",
         lastUploadResult: "error",
-        lastError: message,
+        lastError: localizedMessage("upload.failedWithDetails", { details: message }),
       });
       this.state.addLog("error", message);
     }
@@ -443,9 +440,10 @@ export class AppRuntimeController {
           consentRequired: true,
           permissionStatus: this.unauthorizedPermissionStatus(),
           uploadStatus: "needs-consent",
-          lastError: error.message,
-          privacyNotice:
-            "Third-party upload permission is required before uploading the selected save.",
+          lastError: localizedMessage("thirdPartyUpload.permissionRequiredBeforeUploadingSelected"),
+          privacyNotice: localizedMessage(
+            "thirdPartyUpload.permissionRequiredBeforeUploadingSelected",
+          ),
         });
         this.state.addLog("warn", error.message);
       }
@@ -475,7 +473,7 @@ export class AppRuntimeController {
         uploadStatus: "error",
         lastUploadFinishedAt: new Date().toISOString(),
         lastUploadResult: "error",
-        lastError: message,
+        lastError: localizedMessage("upload.failedWithDetails", { details: message }),
       });
       this.state.addLog("error", message);
     }
@@ -530,9 +528,12 @@ export class AppRuntimeController {
           consentRequired: true,
           permissionStatus: this.unauthorizedPermissionStatus(),
           uploadStatus: "needs-consent",
-          lastError: error.message,
-          privacyNotice:
-            "Third-party upload permission is required before scanning saves or opening the map.",
+          lastError: localizedMessage(
+            "thirdPartyUpload.permissionRequiredBeforeScanningOrOpeningMap",
+          ),
+          privacyNotice: localizedMessage(
+            "thirdPartyUpload.permissionRequiredBeforeScanningOrOpeningMap",
+          ),
         });
         this.state.addLog("warn", error.message);
       }
@@ -572,9 +573,11 @@ export class AppRuntimeController {
     this.syncConsentState({
       permissionStatus: this.unauthorizedPermissionStatus(),
       consentPersistenceStatus: "error",
-      consentPersistenceMessage: message,
-      lastError: message,
-      privacyNotice: `Preferences could not be saved: ${message}`,
+      consentPersistenceMessage: localizedMessage("preferences.couldNotBeSaved", {
+        details: message,
+      }),
+      lastError: localizedMessage("preferences.couldNotBeSaved", { details: message }),
+      privacyNotice: localizedMessage("preferences.couldNotBeSaved", { details: message }),
     });
     this.state.addLog("error", message);
   }
@@ -583,20 +586,28 @@ export class AppRuntimeController {
     const message = errorMessage(error);
     this.syncConsentState({
       consentPersistenceStatus: "error",
-      consentPersistenceMessage: message,
-      lastError: message,
+      consentPersistenceMessage: localizedMessage("preferences.couldNotBeSaved", {
+        details: message,
+      }),
+      lastError: localizedMessage("preferences.couldNotBeSaved", { details: message }),
     });
     this.state.addLog("error", message);
   }
 
-  private reportConsentPersistenceError(prefix: string, error: unknown): void {
+  private reportConsentPersistenceError(error: unknown): void {
     const message = errorMessage(error);
     this.syncConsentState({
       permissionStatus: this.unauthorizedPermissionStatus(),
       consentPersistenceStatus: "error",
-      consentPersistenceMessage: `${prefix} ${message}`,
-      lastError: message,
-      privacyNotice: `${prefix} ${message}`,
+      consentPersistenceMessage: localizedMessage("thirdPartyUpload.permissionCouldNotBeSaved", {
+        details: message,
+      }),
+      lastError: localizedMessage("thirdPartyUpload.permissionCouldNotBeSaved", {
+        details: message,
+      }),
+      privacyNotice: localizedMessage("thirdPartyUpload.permissionCouldNotBeSaved", {
+        details: message,
+      }),
     });
     this.state.addLog("error", message);
   }

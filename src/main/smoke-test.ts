@@ -7,6 +7,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import type { App, BrowserWindow, IpcMain } from "electron";
 import { AppStateStore } from "../services/app-state.js";
+import { localizedMessage } from "../shared/i18n-messages.js";
 import { IPC_CHANNELS } from "../shared/ipc.js";
 import type { AppLanguage, AppStateSnapshot } from "../shared/state.js";
 import { DEFAULT_APP_LANGUAGE } from "../shared/state.js";
@@ -133,7 +134,7 @@ function createSmokeCommands(state: AppStateStore, counters: SmokeCounters): Smo
         uploadStatus: "needs-consent",
         latestSavePath: null,
         lastUploadResult: null,
-        lastError: "Smoke test did not scan saves.",
+        lastError: localizedMessage("smoke.didNotScanSaves"),
       });
       return state.getSnapshot();
     },
@@ -151,7 +152,7 @@ function createSmokeCommands(state: AppStateStore, counters: SmokeCounters): Smo
         permissionStatus: "granted",
         acceptedDisclosureVersion: 1,
         autoStartWatcher: false,
-        privacyNotice: "Smoke test simulated accept without starting watcher.",
+        privacyNotice: localizedMessage("smoke.acceptedWithoutWatcher"),
       });
       return state.getSnapshot();
     },
@@ -160,7 +161,7 @@ function createSmokeCommands(state: AppStateStore, counters: SmokeCounters): Smo
         consentRequired: true,
         permissionStatus: "not-granted",
         uploadStatus: "needs-consent",
-        privacyNotice: "Smoke test kept disclosure required.",
+        privacyNotice: localizedMessage("smoke.disclosureStillRequired"),
       });
       return state.getSnapshot();
     },
@@ -170,7 +171,7 @@ function createSmokeCommands(state: AppStateStore, counters: SmokeCounters): Smo
         permissionStatus: "revoked",
         acceptedDisclosureVersion: null,
         autoStartWatcher: false,
-        privacyNotice: "Smoke test simulated revoke.",
+        privacyNotice: localizedMessage("smoke.revoked"),
       });
       return state.getSnapshot();
     },
