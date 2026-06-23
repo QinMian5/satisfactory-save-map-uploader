@@ -13,7 +13,7 @@ body:
     attributes:
       label: App version
       description: Use the version shown in the app or release file name.
-      placeholder: "0.1.0"
+      placeholder: "0.2.0"
     validations:
       required: true
   - type: input
@@ -51,4 +51,3 @@ body:
     attributes:
       label: Logs or screenshots
       description: Remove private paths or save names if needed. Do not attach save files.
-

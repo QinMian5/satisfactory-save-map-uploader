@@ -51,10 +51,10 @@ Windows Sandbox is optional. If enabled, copy the generated release artifacts in
 
 Unsigned installers and portable zips can trigger Windows SmartScreen or Defender warnings. Record the exact prompt instead of treating every warning as a functional failure.
 
-1. Copy `SatisfactorySaveMapUploader-Installer-0.1.0-x64.exe`, `SatisfactorySaveMapUploader-Portable-0.1.0-x64.zip`, and their `.sha256` files into a clean Windows environment without Node or pnpm.
+1. Copy `SatisfactorySaveMapUploader-Installer-0.2.0-x64.exe`, `SatisfactorySaveMapUploader-Portable-0.2.0-x64.zip`, and their `.sha256` files into a clean Windows environment without Node or pnpm.
 2. Verify each SHA-256 checksum.
 3. Record Windows SmartScreen and Defender behavior for the installer and the portable zip.
-4. Run `SatisfactorySaveMapUploader-Installer-0.1.0-x64.exe`.
+4. Run `SatisfactorySaveMapUploader-Installer-0.2.0-x64.exe`.
 5. Confirm the installer shows a guided setup flow and allows selecting an installation directory.
 6. Confirm installation does not require administrator permission.
 7. Confirm the Start menu shortcut is present and launches the app.
@@ -69,7 +69,7 @@ Unsigned installers and portable zips can trigger Windows SmartScreen or Defende
 16. After uninstall, confirm no app process remains.
 17. Check the user profile for cache, session, shortcut, installer, and application data remnants. Electron cache and user preferences may remain under the user profile after uninstall; record them instead of treating every user-data remnant as an install failure.
 18. Inspect the installation directory and confirm it does not contain Playwright Chromium, `ms-playwright`, `.local-browsers`, `chrome-win`, `playwright`, or `@playwright`.
-19. Extract `SatisfactorySaveMapUploader-Portable-0.1.0-x64.zip` in a clean folder.
+19. Extract `SatisfactorySaveMapUploader-Portable-0.2.0-x64.zip` in a clean folder.
 20. Run `SatisfactorySaveMapUploader.exe` from the extracted portable folder.
 21. Confirm the portable app starts without installation and uses the same first-run permission behavior.
 22. Close the portable app and confirm no app, Electron, Chromium, or Node processes remain.

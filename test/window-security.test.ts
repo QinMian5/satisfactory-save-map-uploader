@@ -32,6 +32,7 @@ describe("window security options", () => {
       sandbox: true,
       webSecurity: true,
       webviewTag: false,
+      backgroundThrottling: false,
       partition: "map",
     });
     expect(createMapWindowOptions().webPreferences).not.toHaveProperty("preload");
@@ -44,6 +45,7 @@ describe("window security options", () => {
       sandbox: true,
       webSecurity: true,
       webviewTag: false,
+      backgroundThrottling: false,
       partition: "map",
     });
     expect(createMapViewOptions().webPreferences).not.toHaveProperty("preload");

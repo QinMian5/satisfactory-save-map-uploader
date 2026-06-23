@@ -6,7 +6,7 @@ export const APP_METADATA = {
   productName: "Satisfactory Save Map Uploader",
   appId: "com.mianqin.satisfactory-save-map-uploader",
   executableName: "SatisfactorySaveMapUploader",
-  version: "0.1.0",
+  version: "0.2.0",
   author: "Mian Qin",
   description:
     "Desktop uploader that provides selected Satisfactory saves to the Satisfactory Calculator interactive map.",
