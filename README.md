@@ -69,6 +69,8 @@ pnpm run make:portable
 
 More project details live in [the design spec](docs/specs/designs/save-map-uploader.md), [the release policy](docs/release-policy.md), [the privacy notice](PRIVACY.md), and [the security policy](SECURITY.md).
 
+Contributions are welcome through issues and pull requests. Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a larger change.
+
 ## License
 
 MIT. See [LICENSE](LICENSE).

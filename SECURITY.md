@@ -13,5 +13,3 @@ Preferred reporting path:
 1. Use GitHub private vulnerability reporting or a GitHub Security Advisory for this repository.
 2. Include reproduction steps, affected version, and impact.
 3. Avoid attaching real Satisfactory save files unless the maintainer explicitly requests a minimized example.
-
-Repository setup still requires enabling GitHub private vulnerability reporting in the repository security settings.
