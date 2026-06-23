@@ -30,6 +30,8 @@ async function main() {
     prepackagedPath,
     "--config",
     "electron-builder.config.cjs",
+    "--publish",
+    "never",
   ]);
   if (targets.includes("zip")) {
     await createPortableZip(packageJson);

@@ -56,12 +56,14 @@ describe("build configuration", () => {
   });
 
   it("uses uploader product metadata and builds GitHub release artifacts", async () => {
-    const [packageJsonText, builderConfig, forgeConfig, appMetadata] = await Promise.all([
-      readFile("package.json", "utf8"),
-      readFile("electron-builder.config.cjs", "utf8"),
-      readFile("forge.config.ts", "utf8"),
-      readFile("config/app-metadata.ts", "utf8"),
-    ]);
+    const [packageJsonText, builderConfig, forgeConfig, appMetadata, makeScript] =
+      await Promise.all([
+        readFile("package.json", "utf8"),
+        readFile("electron-builder.config.cjs", "utf8"),
+        readFile("forge.config.ts", "utf8"),
+        readFile("config/app-metadata.ts", "utf8"),
+        readFile("scripts/make-windows.mjs", "utf8"),
+      ]);
     const packageJson = JSON.parse(packageJsonText);
 
     expect(packageJson.name).toBe("satisfactory-save-map-uploader");
@@ -81,6 +83,8 @@ describe("build configuration", () => {
     expect(packageJson.scripts["verify:make"]).toContain("verify-package.mjs make");
     expect(packageJson.scripts["verify:installer"]).toContain("verify-package.mjs installer");
     expect(packageJson.scripts["verify:portable"]).toContain("verify-package.mjs portable");
+    expect(makeScript).toContain('"--publish"');
+    expect(makeScript).toContain('"never"');
     expect(builderConfig).toContain('appId: "com.mianqin.satisfactory-save-map-uploader"');
     expect(builderConfig).toContain('target: ["nsis", "zip"]');
     expect(builderConfig).toContain("SatisfactorySaveMapUploader-Installer-");
