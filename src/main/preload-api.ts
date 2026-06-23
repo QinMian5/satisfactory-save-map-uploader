@@ -31,6 +31,8 @@ export function createPreloadApi(ipcRenderer: IpcRendererPort): SatisfactoryRend
     uploadLatestSave: () =>
       ipcRenderer.invoke(IPC_CHANNELS.uploadLatestSave) as Promise<AppStateSnapshot>,
     openMap: () => ipcRenderer.invoke(IPC_CHANNELS.openMap) as Promise<AppStateSnapshot>,
+    openSaveFolder: () =>
+      ipcRenderer.invoke(IPC_CHANNELS.openSaveFolder) as Promise<AppStateSnapshot>,
     onStateChanged: (listener: (state: AppStateSnapshot) => void) => {
       const handler = (_event: unknown, state: AppStateSnapshot): void => {
         listener(state);

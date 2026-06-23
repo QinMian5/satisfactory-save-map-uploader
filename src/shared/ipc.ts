@@ -14,6 +14,7 @@ export const IPC_CHANNELS = {
   stopWatcher: "satisfactory:stop-watcher",
   uploadLatestSave: "satisfactory:upload-latest-save",
   openMap: "satisfactory:open-map",
+  openSaveFolder: "satisfactory:open-save-folder",
   stateChanged: "satisfactory:state-changed",
 } as const;
 
@@ -28,5 +29,6 @@ export type SatisfactoryRendererApi = {
   stopWatcher: () => Promise<AppStateSnapshot>;
   uploadLatestSave: () => Promise<AppStateSnapshot>;
   openMap: () => Promise<AppStateSnapshot>;
+  openSaveFolder: () => Promise<AppStateSnapshot>;
   onStateChanged: (listener: (state: AppStateSnapshot) => void) => () => void;
 };

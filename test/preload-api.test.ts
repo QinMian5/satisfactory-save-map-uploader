@@ -37,6 +37,7 @@ describe("createPreloadApi", () => {
       "getState",
       "onStateChanged",
       "openMap",
+      "openSaveFolder",
       "revokeThirdPartyUpload",
       "setLanguage",
       "startWatcher",
@@ -87,6 +88,19 @@ describe("createPreloadApi", () => {
     ).setLanguage("zh-CN");
 
     expect(ipcRenderer.invoke).toHaveBeenCalledWith(IPC_CHANNELS.setLanguage, "zh-CN");
+  });
+
+  it("lets the renderer request opening the save folder without providing a path", async () => {
+    const ipcRenderer = createIpcRenderer();
+    const api = createPreloadApi(ipcRenderer);
+
+    await api.openSaveFolder();
+
+    expect(ipcRenderer.invoke).toHaveBeenCalledWith(IPC_CHANNELS.openSaveFolder);
+    expect(ipcRenderer.invoke).not.toHaveBeenCalledWith(
+      IPC_CHANNELS.openSaveFolder,
+      expect.anything(),
+    );
   });
 
   it("forwards preload invoke arguments to the real Electron ipcRenderer", async () => {

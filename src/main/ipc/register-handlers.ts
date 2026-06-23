@@ -15,6 +15,7 @@ type RegisterIpcHandlersOptions = {
     stopWatcher: () => Promise<AppStateSnapshot>;
     uploadLatestSave: () => Promise<AppStateSnapshot>;
     openMap: () => Promise<AppStateSnapshot>;
+    openSaveFolder: () => Promise<AppStateSnapshot>;
     acceptThirdPartyUpload: () => Promise<AppStateSnapshot>;
     declineThirdPartyUpload: () => Promise<AppStateSnapshot>;
     revokeThirdPartyUpload: () => Promise<AppStateSnapshot>;
@@ -71,6 +72,10 @@ export function registerIpcHandlers(options: RegisterIpcHandlersOptions): () => 
     assertTrustedSender(event, trustedSender);
     return commands.openMap();
   });
+  ipcMain.handle(IPC_CHANNELS.openSaveFolder, async (event): Promise<AppStateSnapshot> => {
+    assertTrustedSender(event, trustedSender);
+    return commands.openSaveFolder();
+  });
 
   return () => {
     ipcMain.removeHandler(IPC_CHANNELS.getState);
@@ -83,5 +88,6 @@ export function registerIpcHandlers(options: RegisterIpcHandlersOptions): () => 
     ipcMain.removeHandler(IPC_CHANNELS.stopWatcher);
     ipcMain.removeHandler(IPC_CHANNELS.uploadLatestSave);
     ipcMain.removeHandler(IPC_CHANNELS.openMap);
+    ipcMain.removeHandler(IPC_CHANNELS.openSaveFolder);
   };
 }

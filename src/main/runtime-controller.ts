@@ -1,6 +1,7 @@
 // abstract: Main-process orchestration for consent, watcher lifecycle, and upload commands.
 // out_of_scope: Electron app bootstrapping, renderer DOM, and preferences JSON validation.
 
+import path from "node:path";
 import type { AppStateStore } from "../services/app-state.js";
 import {
   type ConsentController,
@@ -45,6 +46,7 @@ type RuntimeControllerOptions = {
   revocationMarker: RevocationMarkerWriter;
   resolveSaveRoot: () => string;
   createUploader: (authorization: UploadAuthorizationPort) => SaveUploadPort;
+  openPath?: (targetPath: string) => Promise<string>;
   quitApp?: () => void;
   createWatcher?: (options: {
     saveRoot: string;
@@ -61,6 +63,7 @@ export class AppRuntimeController {
   private readonly revocationMarker: RevocationMarkerWriter;
   private readonly resolveSaveRoot: () => string;
   private readonly createUploader: (authorization: UploadAuthorizationPort) => SaveUploadPort;
+  private readonly openPath: (targetPath: string) => Promise<string>;
   private readonly quitApp: () => void;
   private readonly createWatcher: NonNullable<RuntimeControllerOptions["createWatcher"]>;
   private watcher: RuntimeWatcherPort | undefined;
@@ -77,6 +80,7 @@ export class AppRuntimeController {
     this.revocationMarker = options.revocationMarker;
     this.resolveSaveRoot = options.resolveSaveRoot;
     this.createUploader = options.createUploader;
+    this.openPath = options.openPath ?? (async () => "No folder opener is configured.");
     this.quitApp = options.quitApp ?? (() => undefined);
     this.createWatcher =
       options.createWatcher ??
@@ -330,6 +334,19 @@ export class AppRuntimeController {
     });
   }
 
+  async openSaveFolder(): Promise<AppStateSnapshot> {
+    return this.runExclusive(async () => {
+      if (!this.requireConsent()) {
+        return;
+      }
+      const targetPath = this.getSaveFolderTargetPath();
+      const openError = await this.openPath(targetPath);
+      if (openError) {
+        throw new Error(`Could not open save folder: ${openError}`);
+      }
+    });
+  }
+
   async close(): Promise<void> {
     this.closed = true;
     await this.closeWatcher();
@@ -388,6 +405,19 @@ export class AppRuntimeController {
       });
       this.state.addLog("error", message);
     }
+  }
+
+  private getSaveFolderTargetPath(): string {
+    const snapshot = this.state.getSnapshot();
+    if (snapshot.latestSavePath) {
+      return path.win32.dirname(snapshot.latestSavePath);
+    }
+    if (snapshot.saveRoot) {
+      return snapshot.saveRoot;
+    }
+    const saveRoot = this.resolveSaveRoot();
+    this.state.update({ saveRoot });
+    return saveRoot;
   }
 
   private async reloadMapAfterLanguageChange(): Promise<void> {

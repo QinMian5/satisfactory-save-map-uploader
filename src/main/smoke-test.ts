@@ -21,6 +21,7 @@ type SmokeWatcher = {
   stopWatcher: () => Promise<AppStateSnapshot>;
   uploadLatestSave: () => Promise<AppStateSnapshot>;
   openMap: () => Promise<AppStateSnapshot>;
+  openSaveFolder: () => Promise<AppStateSnapshot>;
   acceptThirdPartyUpload: () => Promise<AppStateSnapshot>;
   declineThirdPartyUpload: () => Promise<AppStateSnapshot>;
   revokeThirdPartyUpload: () => Promise<AppStateSnapshot>;
@@ -140,6 +141,10 @@ function createSmokeCommands(state: AppStateStore, counters: SmokeCounters): Smo
       state.addLog("info", "Smoke test did not create a map window.");
       return state.getSnapshot();
     },
+    openSaveFolder: async () => {
+      state.addLog("info", "Smoke test did not open a save folder.");
+      return state.getSnapshot();
+    },
     acceptThirdPartyUpload: async () => {
       state.update({
         consentRequired: false,
@@ -187,7 +192,7 @@ async function verifyRenderer(statusWindow: BrowserWindow): Promise<void> {
       async () => {
         const api = window.satisfactoryApp;
         if (!api) return { ok: false, reason: "missing preload API" };
-        for (const name of ["getState", "getDisclosure", "acceptThirdPartyUpload", "declineThirdPartyUpload", "revokeThirdPartyUpload", "setLanguage", "startWatcher", "stopWatcher", "uploadLatestSave", "openMap", "onStateChanged"]) {
+        for (const name of ["getState", "getDisclosure", "acceptThirdPartyUpload", "declineThirdPartyUpload", "revokeThirdPartyUpload", "setLanguage", "startWatcher", "stopWatcher", "uploadLatestSave", "openMap", "openSaveFolder", "onStateChanged"]) {
           if (typeof api[name] !== "function") {
             return { ok: false, reason: "missing API method: " + name };
           }

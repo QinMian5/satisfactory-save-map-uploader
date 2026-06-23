@@ -58,6 +58,7 @@ function createController(options: {
   clearRevocationMarker?: () => Promise<void>;
   quitApp?: () => void;
   resolveSaveRoot?: () => string;
+  openPath?: (targetPath: string) => Promise<string>;
   watcher?: {
     start: () => Promise<void>;
     stop: () => Promise<void>;
@@ -113,6 +114,7 @@ function createController(options: {
       clearAndConfirmAbsent: options.clearRevocationMarker ?? vi.fn().mockResolvedValue(undefined),
     },
     resolveSaveRoot: options.resolveSaveRoot ?? vi.fn(() => "C:\\Saves"),
+    openPath: options.openPath ?? vi.fn().mockResolvedValue(""),
     createUploader,
     createWatcher,
     quitApp: options.quitApp,
@@ -399,6 +401,57 @@ describe("AppRuntimeController", () => {
     expect(createUploader).not.toHaveBeenCalled();
     expect(state.getSnapshot()).toMatchObject({
       consentRequired: true,
+      uploadStatus: "needs-consent",
+    });
+  });
+
+  it("opens the folder containing the currently opened save", async () => {
+    const openPath = vi.fn().mockResolvedValue("");
+    const resolveSaveRoot = vi.fn(() => "C:\\Saves");
+    const { controller, state } = createController({
+      consent: createAuthorizedConsent(false),
+      resolveSaveRoot,
+      openPath,
+    });
+    state.update({ latestSavePath: "C:\\Saves\\123\\Factory.sav" });
+
+    await controller.openSaveFolder();
+
+    expect(openPath).toHaveBeenCalledWith("C:\\Saves\\123");
+    expect(resolveSaveRoot).not.toHaveBeenCalled();
+  });
+
+  it("opens the default save root when no save is currently opened", async () => {
+    const openPath = vi.fn().mockResolvedValue("");
+    const resolveSaveRoot = vi.fn(() => "C:\\Saves");
+    const { controller, state } = createController({
+      consent: createAuthorizedConsent(false),
+      resolveSaveRoot,
+      openPath,
+    });
+
+    await controller.openSaveFolder();
+
+    expect(openPath).toHaveBeenCalledWith("C:\\Saves");
+    expect(state.getSnapshot()).toMatchObject({ saveRoot: "C:\\Saves" });
+  });
+
+  it("does not resolve the save root when opening the save folder while unauthorized", async () => {
+    const openPath = vi.fn().mockResolvedValue("");
+    const resolveSaveRoot = vi.fn(() => "C:\\Saves");
+    const { controller, state } = createController({
+      consent: createUnauthorizedConsent(),
+      resolveSaveRoot,
+      openPath,
+    });
+
+    await controller.openSaveFolder();
+
+    expect(openPath).not.toHaveBeenCalled();
+    expect(resolveSaveRoot).not.toHaveBeenCalled();
+    expect(state.getSnapshot()).toMatchObject({
+      consentRequired: true,
+      saveRoot: null,
       uploadStatus: "needs-consent",
     });
   });

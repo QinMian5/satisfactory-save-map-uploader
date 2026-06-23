@@ -1,7 +1,7 @@
 // abstract: Compact uploader dashboard toolbar.
 // out_of_scope: Electron IPC, save scanning, and upload implementation.
 
-import { Pause, Play, ShieldOff, Upload } from "lucide-react";
+import { FolderOpen, Pause, Play, ShieldOff, Upload } from "lucide-react";
 import type * as React from "react";
 import type { AppLanguage } from "../../shared/state.js";
 import { LanguageSwitcher } from "../components/language-switcher.js";
@@ -35,7 +35,12 @@ type DashboardViewProps = {
   language: AppLanguage;
   commands: Pick<
     SatisfactoryAppCommands,
-    "disableUploadsAndExit" | "setLanguage" | "startWatcher" | "stopWatcher" | "uploadLatestSave"
+    | "disableUploadsAndExit"
+    | "setLanguage"
+    | "startWatcher"
+    | "stopWatcher"
+    | "uploadLatestSave"
+    | "openSaveFolder"
   >;
 };
 
@@ -55,33 +60,38 @@ export function DashboardView({ commands, copy, language, model }: DashboardView
             />
           </header>
 
-          <section aria-label={copy.dashboard.commandsLabel} className="flex flex-col gap-2">
-            {model.showStartButton ? (
-              <CommandTooltip description={copy.dashboard.startTooltip}>
-                <Button disabled={model.startDisabled} onClick={() => void commands.startWatcher()}>
-                  <Play className="h-4 w-4" aria-hidden="true" />
-                  {copy.dashboard.start}
-                </Button>
-              </CommandTooltip>
-            ) : null}
-            {model.showStopButton ? (
-              <CommandTooltip description={copy.dashboard.stopTooltip}>
-                <Button disabled={model.stopDisabled} onClick={() => void commands.stopWatcher()}>
-                  <Pause className="h-4 w-4" aria-hidden="true" />
-                  {copy.dashboard.stop}
-                </Button>
-              </CommandTooltip>
-            ) : null}
-            <CommandTooltip description={copy.dashboard.uploadTooltip}>
-              <Button
-                disabled={model.uploadDisabled}
-                onClick={() => void commands.uploadLatestSave()}
-              >
-                <Upload className="h-4 w-4" aria-hidden="true" />
-                {copy.dashboard.upload}
+          {model.showStartButton ? (
+            <CommandTooltip description={copy.dashboard.startTooltip}>
+              <Button disabled={model.startDisabled} onClick={() => void commands.startWatcher()}>
+                <Play className="h-4 w-4" aria-hidden="true" />
+                {copy.dashboard.start}
               </Button>
             </CommandTooltip>
-          </section>
+          ) : null}
+          {model.showStopButton ? (
+            <CommandTooltip description={copy.dashboard.stopTooltip}>
+              <Button disabled={model.stopDisabled} onClick={() => void commands.stopWatcher()}>
+                <Pause className="h-4 w-4" aria-hidden="true" />
+                {copy.dashboard.stop}
+              </Button>
+            </CommandTooltip>
+          ) : null}
+          <CommandTooltip description={copy.dashboard.uploadTooltip}>
+            <Button
+              disabled={model.uploadDisabled}
+              onClick={() => void commands.uploadLatestSave()}
+            >
+              <Upload className="h-4 w-4" aria-hidden="true" />
+              {copy.dashboard.upload}
+            </Button>
+          </CommandTooltip>
+
+          <CommandTooltip description={copy.dashboard.openSaveFolderTooltip}>
+            <Button onClick={() => void commands.openSaveFolder()}>
+              <FolderOpen className="h-4 w-4" aria-hidden="true" />
+              {copy.dashboard.openSaveFolder}
+            </Button>
+          </CommandTooltip>
 
           <SummaryCard label={copy.dashboard.currentSaveLabel} title={model.latestSaveTitle} />
 

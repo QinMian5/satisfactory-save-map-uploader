@@ -88,6 +88,8 @@ describe("renderer disclosure UI", () => {
     expect(renderer).not.toContain("Permission storage");
     expect(renderer).not.toContain("Upload permission is revoked");
     expect(renderer).not.toContain("Allow uploads again");
+    expect(renderer).not.toContain("Watcher commands");
+    expect(renderer).not.toContain("监控操作");
   });
 
   it("keeps the dashboard header to a single title", async () => {
@@ -98,7 +100,7 @@ describe("renderer disclosure UI", () => {
 
     expect(dashboard).toContain("copy.dashboard.title");
     expect(i18n).toContain("Map uploader");
-    expect(dashboard.match(/<CommandTooltip/g)?.length).toBe(4);
+    expect(dashboard.match(/<CommandTooltip/g)?.length).toBe(5);
     expect(dashboard).not.toContain("Permission");
     expect(dashboard).not.toContain("app-kicker");
     expect(dashboard).not.toContain("Satisfactory Save Map Uploader");
@@ -106,18 +108,14 @@ describe("renderer disclosure UI", () => {
 
   it("places disable uploads below the current save summary", async () => {
     const dashboard = await readFile("src/renderer/views/dashboard-view.tsx", "utf8");
-    const commandSectionStart = dashboard.indexOf("aria-label={copy.dashboard.commandsLabel}");
     const currentSaveSummary = dashboard.indexOf(
       "<SummaryCard label={copy.dashboard.currentSaveLabel}",
     );
     const disableDialog = dashboard.indexOf("<AlertDialog>");
 
-    expect(commandSectionStart).toBeGreaterThan(-1);
-    expect(currentSaveSummary).toBeGreaterThan(commandSectionStart);
+    expect(currentSaveSummary).toBeGreaterThan(-1);
     expect(disableDialog).toBeGreaterThan(currentSaveSummary);
-    expect(dashboard.slice(commandSectionStart, currentSaveSummary)).not.toContain(
-      "copy.dashboard.disable",
-    );
+    expect(dashboard.slice(0, currentSaveSummary)).not.toContain("copy.dashboard.disable");
   });
 
   it("keeps the disable confirmation inside the left toolbar", async () => {

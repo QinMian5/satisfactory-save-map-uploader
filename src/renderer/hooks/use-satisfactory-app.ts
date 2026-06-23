@@ -13,6 +13,7 @@ export type SatisfactoryAppCommands = {
   startWatcher: () => Promise<void>;
   stopWatcher: () => Promise<void>;
   uploadLatestSave: () => Promise<void>;
+  openSaveFolder: () => Promise<void>;
 };
 
 export type SatisfactoryAppModel = {
@@ -90,6 +91,7 @@ export function useSatisfactoryApp(): SatisfactoryAppModel {
       startWatcher: () => runCommand(window.satisfactoryApp.startWatcher),
       stopWatcher: () => runCommand(window.satisfactoryApp.stopWatcher),
       uploadLatestSave: () => runCommand(window.satisfactoryApp.uploadLatestSave),
+      openSaveFolder: () => runCommand(window.satisfactoryApp.openSaveFolder),
     },
   };
 }

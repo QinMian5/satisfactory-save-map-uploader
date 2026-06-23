@@ -25,13 +25,14 @@ export type RendererCopy = {
   };
   dashboard: {
     title: string;
-    commandsLabel: string;
     start: string;
     startTooltip: string;
     stop: string;
     stopTooltip: string;
     upload: string;
     uploadTooltip: string;
+    openSaveFolder: string;
+    openSaveFolderTooltip: string;
     currentSaveLabel: string;
     noSaveSelected: string;
     disable: string;
@@ -72,13 +73,15 @@ export const RENDERER_LANGUAGE_COPY: Record<AppLanguage, RendererCopy> = {
     },
     dashboard: {
       title: "Map uploader",
-      commandsLabel: "Watcher commands",
       start: "Start automatic upload",
       startTooltip: "Scan the save folder and upload new saves automatically.",
       stop: "Pause watching",
       stopTooltip: "Stop automatic monitoring. Manual uploads remain available.",
       upload: "Upload latest save",
       uploadTooltip: "Upload the newest detected save to update the map once.",
+      openSaveFolder: "Open save folder",
+      openSaveFolderTooltip:
+        "Open the folder containing the current save, or the default save folder if no save is open.",
       currentSaveLabel: "Currently opened save",
       noSaveSelected: "No save selected",
       disable: "Disable uploads",
@@ -120,13 +123,14 @@ export const RENDERER_LANGUAGE_COPY: Record<AppLanguage, RendererCopy> = {
     },
     dashboard: {
       title: "地图上传",
-      commandsLabel: "监控操作",
       start: "开始自动上传",
       startTooltip: "扫描存档目录，并自动上传新的存档。",
       stop: "暂停监控",
       stopTooltip: "停止自动监控。手动上传仍可使用。",
       upload: "上传最新存档",
       uploadTooltip: "上传当前检测到的最新存档来更新地图。",
+      openSaveFolder: "打开存档文件夹",
+      openSaveFolderTooltip: "打开当前存档所在文件夹；如果还没有当前存档，则打开默认存档目录。",
       currentSaveLabel: "当前打开的存档",
       noSaveSelected: "未选择存档",
       disable: "禁用上传",

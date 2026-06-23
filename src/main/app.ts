@@ -4,7 +4,7 @@
 import { appendFileSync, mkdirSync, mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { app, ipcMain } from "electron";
+import { app, ipcMain, shell } from "electron";
 import { APP_METADATA } from "../../config/app-metadata.js";
 import { getDefaultSaveRoot } from "../saves.js";
 import { AppStateStore } from "../services/app-state.js";
@@ -167,6 +167,7 @@ async function createRuntime(): Promise<AppRuntime> {
     preferences,
     revocationMarker,
     resolveSaveRoot,
+    openPath: (targetPath) => shell.openPath(targetPath),
     quitApp: () => {
       app.quit();
     },
