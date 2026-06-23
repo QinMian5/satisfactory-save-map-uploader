@@ -69,6 +69,8 @@ pnpm run make:portable
 
 更多项目细节见[设计规格](../specs/designs/save-map-uploader.md)、[发布策略](../release-policy.md)、[隐私说明](../../PRIVACY.md)和[安全策略](../../SECURITY.md)。
 
+欢迎通过 issue 和 pull request 贡献。较大的改动请先阅读 [CONTRIBUTING.md](../../CONTRIBUTING.md)。
+
 ## 许可证
 
 MIT。见 [LICENSE](../../LICENSE)。

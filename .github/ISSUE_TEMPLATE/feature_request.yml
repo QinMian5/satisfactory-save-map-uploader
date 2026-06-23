@@ -1,0 +1,34 @@
+name: Feature request
+description: Suggest a focused improvement.
+title: "feat: "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What problem would this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Describe the smallest useful version of the change.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Optional. Mention simpler alternatives if there are any.
+  - type: checkboxes
+    id: impact
+    attributes:
+      label: Impact
+      options:
+        - label: This changes privacy, upload, or third-party website behavior.
+        - label: This changes packaging, installation, or release behavior.
+        - label: This changes visible UI text or layout.
+

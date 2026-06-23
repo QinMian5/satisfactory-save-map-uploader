@@ -7,6 +7,9 @@ import { describe, expect, it } from "vitest";
 const userReadmes = ["README.md", "docs/readme/README.zh-CN.md"] as const;
 const publicMarkdownFiles = [
   ...userReadmes,
+  "CODE_OF_CONDUCT.md",
+  "CONTRIBUTING.md",
+  ".github/PULL_REQUEST_TEMPLATE.md",
   "PRIVACY.md",
   "SECURITY.md",
   "docs/manual-acceptance.md",
@@ -106,5 +109,22 @@ describe("public documentation", () => {
     expect(manualAcceptance).not.toMatch(/\bwatcher\b/i);
     expect(manualAcceptance).not.toMatch(/Click Start(?! automatic upload)/);
     expect(manualAcceptance).not.toMatch(/Click Stop\b/);
+  });
+
+  it("provides the minimum contribution templates for public collaboration", async () => {
+    const contributing = await readMarkdown("CONTRIBUTING.md");
+    const codeOfConduct = await readMarkdown("CODE_OF_CONDUCT.md");
+    const pullRequestTemplate = await readMarkdown(".github/PULL_REQUEST_TEMPLATE.md");
+    const bugReportTemplate = await readMarkdown(".github/ISSUE_TEMPLATE/bug_report.yml");
+    const featureRequestTemplate = await readMarkdown(".github/ISSUE_TEMPLATE/feature_request.yml");
+
+    expect(contributing).toContain("pnpm run check");
+    expect(contributing).toContain("type(scope): summary");
+    expect(contributing).toContain("Do not attach real save files");
+    expect(codeOfConduct).toContain("maintainer");
+    expect(pullRequestTemplate).toContain("pnpm run check");
+    expect(pullRequestTemplate).toContain("Privacy or upload behavior");
+    expect(bugReportTemplate).toContain("Do not upload or attach real save files");
+    expect(featureRequestTemplate).toContain("Problem");
   });
 });

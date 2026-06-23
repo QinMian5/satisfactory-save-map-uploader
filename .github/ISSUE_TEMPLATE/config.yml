@@ -1,0 +1,9 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/QinMian5/satisfactory-save-map-uploader/security/advisories/new
+    about: Report security issues privately instead of opening a public issue.
+  - name: Releases
+    url: https://github.com/QinMian5/satisfactory-save-map-uploader/releases
+    about: Download the latest installer or portable zip.
+
